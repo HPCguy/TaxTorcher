@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html>
+<HEAD>
+<TITLE>Special K's Tax Torcher</TITLE>
+<!-- by Jeff Keasler, Livermore CA -->
+
+<STYLE>
+input[type=text] {
+   width : 70px ;
+}
+</STYLE>
+
+
+<SCRIPT>
+
+// 2021 Federal Tax Info
+
+var fedTax = {
+   single : {
+      scredthresh : 19750.,
+      stdDeduction : 12550.,
+      taxTable : [
+         [   9950., 0.10 ],
+         [  40525., 0.12 ],
+         [  86375., 0.22 ],
+         [ 164925., 0.24 ],
+         [ 209425., 0.32 ],
+         [ 523600., 0.35 ],
+         [   1.e12, 0.37 ]
+      ],
+      capGain : [
+         [  40400., 0.00 ],
+         [ 445850., 0.15 ],
+         [   1.e12, 0.20 ]
+      ]
+   },
+   headHousehold : {
+      scredthresh : 29625.,
+      stdDeduction : 18800.,
+      taxTable : [
+         [  14200., 0.10 ],
+         [  54200., 0.12 ],
+         [  86350., 0.22 ],
+         [ 164900., 0.24 ],
+         [ 209400., 0.32 ],
+         [ 523600., 0.35 ],
+         [   1.e12, 0.37 ]
+      ],
+      capGain : [
+         [  54100., 0.00 ],
+         [ 473750., 0.15 ],
+         [   1.e12, 0.20 ]
+      ]
+   },
+   marriedSeparate : {
+      scredthresh : 19750.,
+      stdDeduction : 12550.,
+      taxTable : [
+         [   9950., 0.10 ],
+         [  40525., 0.12 ],
+         [  86375., 0.22 ],
+         [ 164925., 0.24 ],
+         [ 209425., 0.32 ],
+         [ 314150., 0.35 ],
+         [   1.e12, 0.37 ]
+      ],
+      capGain : [
+         [  40400., 0.00 ],
+         [ 250800., 0.15 ],
+         [   1.e12, 0.20 ]
+      ]
+   },
+   marriedJoint : {
+      scredthresh : 39500.,
+      stdDeduction : 25100.,
+      taxTable : [
+         [  19900., 0.10 ],
+         [  81050., 0.12 ],
+         [ 172750., 0.22 ],
+         [ 329850., 0.24 ],
+         [ 418850., 0.32 ],
+         [ 628300., 0.35 ],
+         [   1.e12, 0.37 ]
+      ],
+      capGain : [
+         [  80800., 0.00 ],
+         [ 501600., 0.15 ],
+         [   1.e12, 0.20 ]
+      ]
+   }
+};
+
+// s = single, m = married joint. t = tax table
+// d = deduction, e = exemption, dep = dependent exemption
+
+var stateTax = {
+   AL : {
+      s : {
+         d   :  2500.,
+         e   : -1500.,
+         dep : -1000.,
+         t : [
+            [  500., 0.02 ],
+            [ 3000., 0.04 ],
+            [ 1.e12, 0.05 ]
+         ]
+      },
+      m : {
+         d   :  7500.,
+         e   : -3000.,
+         dep : -1000.,
+         t : [
+            [ 1000., 0.02 ],
+            [ 6000., 0.04 ],
+            [ 1.e12, 0.05 ]
+         ]
+      }
+   },
+   AK : {
+      s : {
+         d   : 0.,
+         e   : 0.,
+         dep : 0.,
+         t : [
+            [ 1.e12, 0.0 ]
+         ]
+      },
+      m : {
+         d   : 0.,
+         e   : 0.,
+         dep : 100.,
+         t : [
+            [ 1.e12, 0.0 ]
+         ]
+      }
+   },
+   AZ : {
+      s : {
+         d   :  12400.,
+         e   : 0.,
+         dep : -100.,
+         t : [
+            [  26500., 0.0259 ],
+            [  53000., 0.0334 ],
+            [ 159000., 0.0417 ],
+            [   1.e12, 0.0450 ]
+         ]
+      },
+      m : {
+         d   : 24800.,
+         e   : 0.,
+         dep : -100.,
+         t : [
+            [  53000., 0.0259 ],
+            [ 106000., 0.0334 ],
+            [ 318000., 0.0417 ],
+            [   1.e12, 0.0450 ]
+         ]
+      }
+   },
+   AR : {
+      s : {
+         d   : 2200.,
+         e   :   26.,
+         dep :   26.,
+         t : [
+            [  4000., 0.020 ],
+            [  8000., 0.040 ],
+            [ 79300., 0.059 ],
+            [  1.e12, 0.066 ]
+         ]
+      },
+      m : {
+         d   : 4400.,
+         e   :   52.,
+         dep :   26.,
+         t : [
+            [  4000., 0.020 ],
+            [  8000., 0.040 ],
+            [ 79300., 0.059 ],
+            [  1.e12, 0.066 ]
+         ]
+      }
+   },
+   CA : {
+      s : {
+         d   : 4601.,
+         e   :  124.,
+         dep :  383.,
+         t : [
+            [   8932., 0.01  ],
+            [  21175., 0.02  ],
+            [  33421., 0.04  ],
+            [  46394., 0.06  ],
+            [  58634., 0.08  ],
+            [ 299508., 0.093 ],
+            [ 359407., 0.103 ],
+            [ 599012., 0.113 ],
+            [1000000., 0.123 ]
+            [   1.e12, 0.133 ]
+         ]
+      },
+      m : {
+         d   : 9202.,
+         e   :  248.,
+         dep :  383.,
+         t : [
+            [   17864., 0.01  ],
+            [   42350., 0.02  ],
+            [   66842., 0.04  ],
+            [   92788., 0.06  ],
+            [  117268., 0.08  ],
+            [  599016., 0.093 ],
+            [  718814., 0.103 ],
+            [ 1198024., 0.113 ],
+            [    1.e12, 0.123 ]
+         ]
+      }
+   },
+   CO : {
+      taxSS : true,
+      s : {
+         d   : 12400.,
+         e   : 0.,
+         dep : 0.,
+         t : [
+            [ 1.e12, 0.0463 ]
+         ]
+      },
+      m : {
+         d   : 24800.,
+         e   : 0.,
+         dep : 0.,
+         t : [
+            [ 1.e12, 0.0463 ]
+         ]
+      }
+   },
+/*
+   CT : {
+      taxSS : true,
+      s : {
+         d   :     0.,
+         e   : 15000.,
+         dep :     0.,
+         t : [
+            [  10000., 0.03   ],
+            [  50000., 0.05   ],
+            [ 100000., 0.055  ],
+            [ 200000., 0.06   ],
+            [ 250000., 0.065  ],
+            [ 500000., 0.069  ],
+            [   1.e12, 0.0699 ]
+         ]
+      },
+      m : {
+         d   :     0.,
+         e   : 24000.,
+         dep :     0.,
+         t : [
+            [   20000., 0.03   ],
+            [  100000., 0.05   ],
+            [  200000., 0.055  ],
+            [  400000., 0.06   ],
+            [  500000., 0.065  ],
+            [ 1000000., 0.069  ],
+            [    1.e12, 0.0699 ]
+         ]
+      }
+   },
+*/
+   DE : {
+      s : {
+         d   : 3250.,
+         e   :  110.,
+         dep :  110.,
+         t : [
+            [  2000., 0.0    ],
+            [  5000., 0.022  ],
+            [ 10000., 0.039  ],
+            [ 20000., 0.048  ],
+            [ 25000., 0.052  ],
+            [ 60000., 0.0555 ],
+            [  1.e12, 0.066  ]
+         ]
+      },
+      m : {
+         d   : 6500.,
+         e   :  220.,
+         dep :  110.,
+         t : [
+            [  2000., 0.0    ],
+            [  5000., 0.022  ],
+            [ 10000., 0.039  ],
+            [ 20000., 0.048  ],
+            [ 25000., 0.052  ],
+            [ 60000., 0.0555 ],
+            [  1.e12, 0.066  ]
+         ]
+      }
+   },
+   DC : {
+      s : {
+         d   : 12400.,
+         e   :     0.,
+         dep :     0.,
+         t : [
+            [   10000., 0.04   ],
+            [   40000., 0.06   ],
+            [   60000., 0.065  ],
+            [  350000., 0.085  ],
+            [ 1000000., 0.0875 ],
+            [    1.e12, 0.0895 ]
+         ]
+      },
+      m : {
+         d   : 24800.,
+         e   :     0.,
+         dep :     0.,
+         t : [
+            [   10000., 0.04   ],
+            [   40000., 0.06   ],
+            [   60000., 0.065  ],
+            [  350000., 0.085  ],
+            [ 1000000., 0.0875 ],
+            [    1.e12, 0.0895 ]
+         ]
+      }
+   },
+   FL : {
+      s : {
+         d   : 0.,
+         e   : 0.,
+         dep : 0.,
+         t : [
+            [ 1.e12, 0.0 ]
+         ]
+      },
+      m : {
+         d   : 0.,
+         e   : 0.,
+         dep : 0.,
+         t : [
+            [ 1.e12, 0.0 ]
+         ]
+      }
+   },
+   GA : {
+      s : {
+         d   :  4600.,
+         e   : -2700.,
+         dep : -3000.,
+         t : [
+            [  750., 0.01 ],
+            [ 2250., 0.02 ],
+            [ 3750., 0.03 ],
+            [ 5250., 0.04 ],
+            [ 7000., 0.05 ],
+            [ 1.e12, 0.06 ]
+         ]
+      },
+      m : {
+         d   :  6000.,
+         e   : -7400.,
+         dep : -3000.,
+         t : [
+            [  1000., 0.01 ],
+            [  3000., 0.02 ],
+            [  5000., 0.03 ],
+            [  7000., 0.04 ],
+            [ 10000., 0.05 ],
+            [  1.e12, 0.06 ]
+         ]
+      }
+   },
+   HI : {
+      s : {
+         d   :  2200.,
+         e   : -1144.,
+         dep : -1144.,
+         t : [
+            [   2400., 0.014  ],
+            [   4800., 0.032  ],
+            [   9600., 0.055  ],
+            [  14400., 0.064  ],
+            [  19200., 0.068  ],
+            [  24000., 0.072  ],
+            [  36000., 0.076  ],
+            [  48000., 0.079  ],
+            [ 150000., 0.0825 ],
+            [ 175000., 0.09   ],
+            [ 200000., 0.1    ],
+            [   1.e12, 0.11   ]
+         ]
+      },
+      m : {
+         d   :  4400.,
+         e   : -2288.,
+         dep : -1144.,
+         t : [
+            [   4800., 0.014  ],
+            [   9600., 0.032  ],
+            [  19200., 0.055  ],
+            [  28800., 0.064  ],
+            [  38400., 0.068  ],
+            [  48000., 0.072  ],
+            [  72000., 0.076  ],
+            [  96000., 0.079  ],
+            [ 300000., 0.0825 ],
+            [ 350000., 0.09   ],
+            [ 400000., 0.1    ],
+            [   1.e12, 0.11   ]
+         ]
+      }
+   },
+   ID : {
+      s : {
+         d   : 12400.,
+         e   :    0.,
+         dep :    0.,
+         t : [
+            [  1568., 0.01125 ],
+            [  3136., 0.03125 ],
+            [  4704., 0.03625 ],
+            [  6272., 0.04625 ],
+            [  7840., 0.05625 ],
+            [ 11760., 0.06625 ],
+            [  1.e12, 0.06925 ]
+         ]
+      },
+      m : {
+         d   : 24800.,
+         e   :     0.,
+         dep :     0.,
+         t : [
+            [  3136., 0.01125 ],
+            [  6272., 0.03125 ],
+            [  9408., 0.03625 ],
+            [ 12544., 0.04625 ],
+            [ 15680., 0.05625 ],
+            [ 23520., 0.06625 ],
+            [  1.e12, 0.06925 ]
+         ]
+      }
+   },
+
+//   IL : {
+//   },
+//   IN : {
+//   },
+
+   IA : {
+      s : {
+         d   : 2080.,
+         e   :   40.,
+         dep :   40.,
+         t : [
+            [  1638., 0.0033 ],
+            [  3276., 0.0067 ],
+            [  6552., 0.0225 ],
+            [ 14742., 0.0414 ],
+            [ 24570., 0.0563 ],
+            [ 32760., 0.0596 ],
+            [ 49140., 0.0625 ],
+            [ 73710., 0.0744 ],
+            [  1.e12, 0.0853 ]
+         ]
+      },
+      m : {
+         d   : 5120.,
+         e   :   80.,
+         dep :   40.,
+         t : [
+            [  1638., 0.0033 ],
+            [  3276., 0.0067 ],
+            [  6552., 0.0225 ],
+            [ 14742., 0.0414 ],
+            [ 24570., 0.0563 ],
+            [ 32760., 0.0596 ],
+            [ 49140., 0.0625 ],
+            [ 73710., 0.0744 ],
+            [  1.e12, 0.0853 ]
+         ]
+      }
+   },
+   KS : {
+      taxSS : true,
+      s : {
+         d   :  3000.,
+         e   : -2250.,
+         dep : -2250.,
+         t : [
+            [  2500., 0.0    ],
+            [ 15000., 0.031  ],
+            [ 30000., 0.0525 ],
+            [  1.e12, 0.057  ]
+         ]
+      },
+      m : {
+         d   :  7500.,
+         e   : -4500.,
+         dep : -2250.,
+         t : [
+            [  5000., 0.0    ],
+            [ 30000., 0.031  ],
+            [ 60000., 0.0525 ],
+            [  1.e12, 0.057  ]
+         ]
+      }
+   },
+   KY : {
+      s : {
+         d   : 2650.,
+         e   :    0.,
+         dep :    0.,
+         t : [
+            [  1.e12, 0.05  ]
+         ]
+      },
+      m : {
+         d   : 5300.,
+         e   :    0.,
+         dep :    0.,
+         t : [
+            [  1.e12, 0.05  ]
+         ]
+      }
+   },
+/*
+   LA : {
+      s : {
+         d   :    0.,
+         e   : 4500.,
+         dep : 1000.,
+         t : [
+            [ 12500., 0.02 ],
+            [ 50000., 0.04 ],
+            [  1.e12, 0.06 ]
+         ]
+      },
+      m : {
+         d   :    0.,
+         e   : 9000.,
+         dep : 1000.,
+         t : [
+            [  25000., 0.02 ],
+            [ 100000., 0.04 ],
+            [   1.e12, 0.06 ]
+         ]
+      }
+   },
+*/
+   ME : {
+      s : {
+         d   : 12400.,
+         e   : -4300.,
+         dep :   300.,
+         t : [
+            [ 22200., 0.058  ],
+            [ 52600., 0.0675 ],
+            [  1.e12, 0.0715 ]
+         ]
+      },
+      m : {
+         d   : 24800.,
+         e   : -8600.,
+         dep :   300.,
+         t : [
+            [  44450., 0.058  ],
+            [ 105200., 0.0675 ],
+            [   1.e12, 0.0715 ]
+         ]
+      }
+   },
+   MD : {
+      s : {
+         d   :  2300.,
+         e   : -3200.,
+         dep : -3200.,
+         t : [
+            [   1000., 0.02   ],
+            [   2000., 0.03   ],
+            [   3000., 0.04   ],
+            [ 100000., 0.0475 ],
+            [ 125000., 0.05   ],
+            [ 150000., 0.0525 ],
+            [ 250000., 0.055  ],
+            [   1.e12, 0.0575 ]
+         ]
+      },
+      m : {
+         d   :  4600.,
+         e   : -6400.,
+         dep : -3200.,
+         t : [
+            [   1000., 0.02   ],
+            [   2000., 0.03   ],
+            [   3000., 0.04   ],
+            [ 150000., 0.0475 ],
+            [ 175000., 0.05   ],
+            [ 225000., 0.0525 ],
+            [ 300000., 0.055  ],
+            [   1.e12, 0.0575 ]
+         ]
+      }
+   },
+/*
+   MA : {
+      s : {
+         d   :    0.,
+         e   : 4400.,
+         dep : 1000.,
+         t : [
+            [ 1.e12, 0.051 ]
+         ]
+      },
+      m : {
+         d   :    0.,
+         e   : 8800.,
+         dep : 1000.,
+         t : [
+            [ 1.e12, 0.051 ]
+         ]
+      }
+  
+ },
+*/
+
+//   MI : {
+//   },
+
+   MN : {
+      taxSS : true,
+      s : {
+         d   : 12400.,
+         e   : 0.,
+         dep : -4300.,
+         t : [
+            [  26960., 0.0535 ],
+            [  88550., 0.0680 ],
+            [ 164400., 0.0785 ],
+            [   1.e12, 0.0985 ]
+         ]
+      },
+      m : {
+         d   : 24800.,
+         e   : 0.,
+         dep : -4300.,
+         t : [
+            [  39410., 0.0535 ],
+            [ 156570., 0.0680 ],
+            [ 273470., 0.0785 ],
+            [   1.e12, 0.0985 ]
+         ]
+      }
+   },
+   MS : {
+      s : {
+         d   :  2300.,
+         e   : -6000.,
+         dep : -1500.,
+         t : [
+            [  1000., 0.0  ],
+            [  5000., 0.03 ],
+            [ 10000., 0.04 ],
+            [  1.e12, 0.05 ]
+         ]
+      },
+      m : {
+         d   :   4600.,
+         e   : -12000.,
+         dep :  -1500.,
+         t : [
+            [  1000., 0.0  ],
+            [  5000., 0.03 ],
+            [ 10000., 0.04 ],
+            [  1.e12, 0.05 ]
+         ]
+      }
+   },
+   MO : {
+      taxSS : true,
+      s : {
+         d   : 12400.,
+         e   :     0.,
+         dep :     0.,
+         t : [
+            [    105., 0.0   ],
+            [   1053., 0.015 ],
+            [   2106., 0.02  ],
+            [   3159., 0.025 ],
+            [   4212., 0.03  ],
+            [   5265., 0.035 ],
+            [   6318., 0.04  ],
+            [   7371., 0.045 ],
+            [   8424., 0.05  ],
+            [   9072., 0.055 ],
+            [   1.e12, 0.059 ]
+         ]
+      },
+      m : {
+         d   : 24800.,
+         e   :     0.,
+         dep :     0.,
+         t : [
+            [    105., 0.0   ],
+            [   1053., 0.015 ],
+            [   2106., 0.02  ],
+            [   3159., 0.025 ],
+            [   4212., 0.03  ],
+            [   5265., 0.035 ],
+            [   6318., 0.04  ],
+            [   7371., 0.045 ],
+            [   8424., 0.05  ],
+            [   9072., 0.055 ],
+            [   1.e12, 0.059 ]
+         ]
+      }
+   },
+   MT : {
+      taxSS : true,
+      s : {
+         d   :  4710.,
+         e   : -2510.,
+         dep : -2510.,
+         t : [
+            [  3100., 0.01  ],
+            [  5400., 0.02  ],
+            [  8200., 0.03  ],
+            [ 11100., 0.04  ],
+            [ 14300., 0.05  ],
+            [ 18400., 0.06  ],
+            [  1.e12, 0.069 ]
+         ]
+      },
+      m : {
+         d   :  9420.,
+         e   : -5020.,
+         dep : -2510.,
+         t : [
+            [  3100., 0.01  ],
+            [  5400., 0.02  ],
+            [  8200., 0.03  ],
+            [ 11100., 0.04  ],
+            [ 14300., 0.05  ],
+            [ 18400., 0.06  ],
+            [  1.e12, 0.069 ]
+         ]
+      }
+   },
+   NE : {
+      taxSS : true,
+      s : {
+         d   : 7000.,
+         e   :  140.,
+         dep :  140.,
+         t : [
+            [  3290., 0.0246 ],
+            [ 19700., 0.0351 ],
+            [ 31750., 0.0501 ],
+            [  1.e12, 0.0684 ]
+         ]
+      },
+      m : {
+         d   : 14000.,
+         e   :   280.,
+         dep :   140.,
+         t : [
+            [  6570., 0.0246 ],
+            [ 39410., 0.0351 ],
+            [ 63500., 0.0501 ],
+            [  1.e12, 0.0684 ]
+         ]
+      }
+   },
+   NV : {
+      s : {
+         d   : 0.,
+         e   : 0.,
+         dep : 0.,
+         t : [
+            [ 1.e12, 0.0 ]
+         ]
+      },
+      m : {
+         d   : 0.,
+         e   : 0.,
+         dep : 0.,
+         t : [
+            [ 1.e12, 0.0 ]
+         ]
+      }
+   },
+/*
+   NH : {
+      s : {
+         d   :    0.,
+         e   : 2400.,
+         dep :    0.,
+         t : [
+            [ 1.e12, 0.05 ]
+         ]
+      },
+      m : {
+         d   :    0.,
+         e   : 4800.,
+         dep :    0.,
+         t : [
+            [ 1.e12, 0.05 ]
+         ]
+      }
+   },
+   NJ : {
+      s : {
+         d   :    0.,
+         e   : 1000.,
+         dep : 1500.,
+         t : [
+            [  20000., 0.014   ],
+            [  35000., 0.0175  ],
+            [  40000., 0.035   ],
+            [  75000., 0.05525 ],
+            [ 500000., 0.0637  ],
+            [   1.e12, 0.0897  ]
+         ]
+      },
+      m : {
+         d   :    0.,
+         e   : 2000.,
+         dep : 1500.,
+         t : [
+            [  20000., 0.014   ],
+            [  50000., 0.0175  ],
+            [  70000., 0.0245  ],
+            [  80000., 0.035   ],
+            [ 150000., 0.05525 ],
+            [ 500000., 0.0637  ],
+            [   1.e12, 0.0897  ]
+         ]
+      }
+   },
+*/
+   NM : {
+      taxSS : true,
+      s : {
+         d   : 12400.,
+         e   :     0.,
+         dep :     0.,
+         t : [
+            [  5500., 0.017 ],
+            [ 11000., 0.032 ],
+            [ 16000., 0.047 ],
+            [  1.e12, 0.049 ]
+         ]
+      },
+      m : {
+         d   : 24800.,
+         e   :     0.,
+         dep :     0.,
+         t : [
+            [  8000., 0.017 ],
+            [ 16000., 0.032 ],
+            [ 24000., 0.047 ],
+            [  1.e12, 0.049 ]
+         ]
+      }
+   },
+   NY : {
+      s : {
+         d   : 8000.,
+         e   :    0.,
+         dep :    0.,
+         t : [
+            [    8500., 0.04   ],
+            [   11700., 0.045  ],
+            [   13900., 0.0525 ],
+            [   21400., 0.059  ],
+            [   80650., 0.0633 ],
+            [  215400., 0.0657 ],
+            [ 1077550., 0.0685 ],
+            [    1.e12, 0.0882 ]
+         ]
+      },
+      m : {
+         d   : 16050.,
+         e   :     0.,
+         dep :     0.,
+         t : [
+            [   17150., 0.04   ],
+            [   23600., 0.045  ],
+            [   27900., 0.0525 ],
+            [   43000., 0.059  ],
+            [  161550., 0.0633 ],
+            [  323200., 0.0657 ],
+            [ 2155350., 0.0685 ],
+            [    1.e12, 0.0882 ]
+         ]
+      }
+   },
+   NC : {
+      s : {
+         d   : 10750.,
+         e   :    0.,
+         dep :    0.,
+         t : [
+            [ 1.e12, 0.0525 ]
+         ]
+      },
+      m : {
+         d   : 21500.,
+         e   :     0.,
+         dep :     0.,
+         t : [
+            [ 1.e12, 0.0525 ]
+         ]
+      }
+   },
+   ND : {
+      taxSS : true,
+      s : {
+         d   : 12400.,
+         e   :     0.,
+         dep :     0.,
+         t : [
+            [  39450., 0.011  ],
+            [  95500., 0.0204 ],
+            [ 199250., 0.0227 ],
+            [ 433200., 0.0264 ],
+            [   1.e12, 0.029  ]
+         ]
+      },
+      m : {
+         d   : 24800.,
+         e   :     0.,
+         dep :     0.,
+         t : [
+            [  65900., 0.011  ],
+            [ 159200., 0.0204 ],
+            [ 242550., 0.0227 ],
+            [ 433200., 0.0264 ],
+            [   1.e12, 0.029  ]
+         ]
+      }
+   },
+   OH : {
+      s : {
+         d   :     0.,
+         e   : -2350.,
+         dep : -2350.,
+         t : [
+            [  22150., 0.0     ],
+            [  44250., 0.02850 ],
+            [  88450., 0.03326 ],
+            [ 110650., 0.03802 ],
+            [ 221300., 0.04413 ],
+            [   1.e12, 0.04797 ]
+         ]
+      },
+      m : {
+         d   :     0.,
+         e   : -4700.,
+         dep : -2350.,
+         t : [
+            [  22150., 0.0     ],
+            [  44250., 0.02850 ],
+            [  88450., 0.03326 ],
+            [ 110650., 0.03802 ],
+            [ 221300., 0.04413 ],
+            [   1.e12, 0.04797 ]
+         ]
+      }
+   },
+   OK : {
+      s : {
+         d   :  6350.,
+         e   : -1000.,
+         dep : -1000.,
+         t : [
+            [ 1000., 0.005 ],
+            [ 2500., 0.01  ],
+            [ 3750., 0.02  ],
+            [ 4900., 0.03  ],
+            [ 7200., 0.04  ],
+            [ 1.e12, 0.05  ]
+         ]
+      },
+      m : {
+         d   : 12700.,
+         e   : -2000.,
+         dep : -1000.,
+         t : [
+            [  2000., 0.005 ],
+            [  5000., 0.01  ],
+            [  7500., 0.02  ],
+            [  9800., 0.03  ],
+            [ 12200., 0.04  ],
+            [  1.e12, 0.05  ]
+         ]
+      }
+   },
+   OR : {
+      s : {
+         d   : 2315.,
+         e   :  210.,
+         dep :  210.,
+         t : [
+            [   3550., 0.05  ],
+            [   8900., 0.07  ],
+            [ 125000., 0.09  ],
+            [   1.e12, 0.099 ]
+         ]
+      },
+      m : {
+         d   : 4630.,
+         e   :  420.,
+         dep :  210.,
+         t : [
+            [   7100., 0.05  ],
+            [  17800., 0.07  ],
+            [ 250000., 0.09  ],
+            [   1.e12, 0.099 ]
+         ]
+      }
+   },
+   PA : {
+      s : {
+         d   : 0.,
+         e   : 0.,
+         dep : 0.,
+         t : [
+            [ 1.e12, 0.0307 ]
+         ]
+      },
+      m : {
+         d   : 0.,
+         e   : 0.,
+         dep : 0.,
+         t : [
+            [ 1.e12, 0.0307 ]
+         ]
+      }
+   },
+   RI : {
+      taxSS : true,
+      s : {
+         d   :  8900.,
+         e   : -4150.,
+         dep : -4150.,
+         t : [
+            [  65250., 0.0375 ],
+            [ 148350., 0.0475 ],
+            [   1.e12, 0.0599 ]
+         ]
+      },
+      m : {
+         d   : 17800.,
+         e   : -8300.,
+         dep : -4150.,
+         t : [
+            [  65250., 0.0375 ],
+            [ 148350., 0.0475 ],
+            [   1.e12, 0.0599 ]
+         ]
+      }
+   },
+   SC : {
+      s : {
+         d   : 12400.,
+         e   :     0.,
+         dep : -4190.,
+         t : [
+            [  3070., 0.0  ],
+            [  6150., 0.03 ],
+            [  9230., 0.04 ],
+            [ 12310., 0.05 ],
+            [ 15400., 0.06 ],
+            [  1.e12, 0.07 ]
+         ]
+      },
+      m : {
+         d   : 24800.,
+         e   :     0.,
+         dep : -4190.,
+         t : [
+            [  3070., 0.0  ],
+            [  6150., 0.03 ],
+            [  9230., 0.04 ],
+            [ 12310., 0.05 ],
+            [ 15400., 0.06 ],
+            [  1.e12, 0.07 ]
+         ]
+      }
+   },
+   SD : {
+      s : {
+         d   : 0.,
+         e   : 0.,
+         dep : 0.,
+         t : [
+            [ 1.e12, 0.0 ]
+         ]
+      },
+      m : {
+         d   : 0.,
+         e   : 0.,
+         dep : 0.,
+         t : [
+            [ 1.e12, 0.0 ]
+         ]
+      }
+   },
+   TN : {
+      s : {
+         d   : 0.,
+         e   : 0.,
+         dep : 0.,
+         t : [
+            [ 1.e12, 0.0 ]
+         ]
+      },
+      m : {
+         d   : 0.,
+         e   : 0.,
+         dep : 0.,
+         t : [
+            [ 1.e12, 0.0 ]
+         ]
+      }
+   },
+   TX : {
+      s : {
+         d   : 0.,
+         e   : 0.,
+         dep : 0.,
+         t : [
+            [ 1.e12, 0.0 ]
+         ]
+      },
+      m : {
+         d   : 0.,
+         e   : 0.,
+         dep : 0.,
+         t : [
+            [ 1.e12, 0.0 ]
+         ]
+      }
+   },
+   UT : {
+      taxSS : true,
+      s : {
+         d   : 744.,
+         e   : 0.,
+         dep : 579.,
+         t : [
+            [ 1.e12, 0.0495 ]
+         ]
+      },
+      m : {
+         d   : 1488.,
+         e   : 0.,
+         dep : 579.,
+         t : [
+            [ 1.e12, 0.0495 ]
+         ]
+      }
+   },
+   VT : {
+      taxSS : true,
+      s : {
+         d   :  6250.,
+         e   : -4350.,
+         dep : -4250.,
+         t : [
+            [  39600., 0.0335 ],
+            [  96000., 0.066  ],
+            [ 200200., 0.076  ],
+            [   1.e12, 0.0875 ]
+         ]
+      },
+      m : {
+         d   : 12500.,
+         e   : -8700.,
+         dep : -4250.,
+         t : [
+            [  66150., 0.0335 ],
+            [ 159950., 0.066  ],
+            [ 243750., 0.076  ],
+            [   1.e12, 0.0875 ]
+         ]
+      }
+   },
+   VA : {
+      s : {
+         d   : 4500.,
+         e   : -930.,
+         dep : -930.,
+         t : [
+            [  3000., 0.02   ],
+            [  5000., 0.03   ],
+            [ 17000., 0.05   ],
+            [  1.e12, 0.0575 ]
+         ]
+      },
+      m : {
+         d   :  9000.,
+         e   : -1860.,
+         dep :  -930.,
+         t : [
+            [  3000., 0.02   ],
+            [  5000., 0.03   ],
+            [ 17000., 0.05   ],
+            [  1.e12, 0.0575 ]
+         ]
+      }
+   },
+   WA : {
+      s : {
+         d   : 0.,
+         e   : 0.,
+         dep : 0.,
+         t : [
+            [ 1.e12, 0.0 ]
+         ]
+      },
+      m : {
+         d   : 0.,
+         e   : 0.,
+         dep : 0.,
+         t : [
+            [ 1.e12, 0.0 ]
+         ]
+      }
+   },
+   WV : {
+      taxSS : true,
+      s : {
+         d   :     0.,
+         e   : -2000.,
+         dep : -2000.,
+         t : [
+            [  10000., 0.03  ],
+            [  25000., 0.04  ],
+            [  40000., 0.045 ],
+            [  60000., 0.06  ],
+            [   1.e12, 0.065 ]
+         ]
+      },
+      m : {
+         d   :     0.,
+         e   : -4000.,
+         dep : -2000.,
+         t : [
+            [  10000., 0.03  ],
+            [  25000., 0.04  ],
+            [  40000., 0.045 ],
+            [  60000., 0.06  ],
+            [   1.e12, 0.065 ]
+         ]
+      }
+   },
+   WI : {
+      s : {
+         d   : 11050.,
+         e   :  -700.,
+         dep :  -700.,
+         t : [
+            [  11970., 0.04   ],
+            [  23930., 0.0521 ],
+            [ 263480., 0.0627 ],
+            [   1.e12, 0.0765 ]
+         ]
+      },
+      m : {
+         d   : 20470.,
+         e   : -1400.,
+         dep :  -700.,
+         t : [
+            [  15960., 0.04   ],
+            [  31910., 0.0521 ],
+            [ 351310., 0.0627 ],
+            [   1.e12, 0.0765 ]
+         ]
+      }
+   },
+   WY : {
+      s : {
+         d   : 0.,
+         e   : 0.,
+         dep : 0.,
+         t : [
+            [ 1.e12, 0.0 ]
+         ]
+      },
+      m : {
+         d   : 0.,
+         e   : 0.,
+         dep : 0.,
+         t : [
+            [ 1.e12, 0.0 ]
+         ]
+      }
+   }
+};
+
+function sessionStorageExists()
+{
+   try {
+      if (sessionStorage) {
+         return true ;
+      }
+   }
+   catch (e) {
+      return false;
+   }
+}
+
+function stateUpdate()
+{
+   var temp ;
+   var done ;
+   var key ;
+   var stateArray = [ ] ;
+   var colorder   = [ ] ;
+   
+var sTaxes =
+  "<table> <thead> <tr> " + "<th> State </th> <th> Tax </th> <TH>&nbsp;&nbsp;&nbsp;&nbsp;</TH>".repeat(5) +
+   "</tr> </thead> <tbody> " ;
+
+   var f2 = document.taxcalc;  // This is the form we'll we working with.
+
+   var   wage = parseFloat(f2.wage.value) ;
+   var income = wage + parseFloat(f2.simpinc.value) ;
+
+   // filestatus is wrong for headHousehold
+   var fileStatus = ( ( f2.status.value == 'marriedJoint' ) ? 'm' : 's' ) ;
+   var numStates = Object.keys(stateTax).length ;
+       
+   var count = 0;
+   for (key in stateTax) {
+      var sObj = stateTax[key] ;
+      var tObj = sObj[fileStatus] ;
+      var sched = tObj['t'] ;
+      var treasint = parseFloat(f2.treasint.value);
+      var capdiv = parseFloat(f2.capdiv.value);
+      var taxdefer = ( (wage == 0.0) ? 0.0 : parseFloat(f2.taxdefer.value) );
+
+      var eTax = ( income + capdiv - tObj['d'] - taxdefer) ;
+      eTax += ( ((sObj["taxSS"] == true) && (f2.noSS.checked == false)) ? parseFloat(f2.ssincome.value) : 0.0 ) ; 
+
+      // Self employment payroll tax adjustment 
+
+      var maxSSincome = wage*0.9235; // this line only applies to self employment,so OK
+      if (maxSSincome > 128400.0) maxSSincome = 128400.0; // 2021 tax year
+
+      if (f2.selfE.checked) {
+         eTax -= (maxSSincome*0.062 + wage*0.0145*0.9235) ;
+      }
+
+      var fTax      = 0.;
+      var fBase     = 0.;
+      var fExempt   = tObj['e'];  /* < 0.0 applied to income, > 0.0 applied to tax */
+
+      if (fExempt < 0.0) eTax += fExempt ;
+      if (eTax > 0.0) {
+        for(var j = 0; j < sched.length; j++) {
+          if (eTax > (sched[j])[0]) {
+              fTax += ((sched[j])[0] - fBase) * (sched[j])[1];
+              fBase = (sched[j])[0];
+          }
+          else {
+              fTax += (eTax - fBase) * (sched[j])[1];
+              break;
+          }
+        }
+        if (fExempt > 0.0) fTax -= fExempt ;
+      }
+      
+      if (fTax < 0.0) fTax = 0.0 ;
+      fTax = Math.round(fTax) ;
+
+      stateArray[count] = [ key, fTax ] ;
+      ++count ;
+   }
+
+   /* sort stateArray by tax amount */
+   if (f2.statesort.value == 'tax') {
+      var place ;
+      for (count=numStates-1; count>0; --count) {
+         done = true;
+         for (place=0; place<count; ++place) {
+            if ((stateArray[place])[1] > (stateArray[place+1])[1]) {
+               temp = stateArray[place] ;
+               stateArray[place] = stateArray[place+1] ;
+               stateArray[place+1] = temp ;
+               done = false ;
+            }
+         }
+         if (done == true) {
+            break ;
+         }
+      }
+   }
+
+   place = 0;
+   for (count=0; count<numStates; ++count) {
+      colorder[place] = stateArray[count] ;
+      place += 5 ;
+      if (place >= numStates) {
+         place = (place % 5) + 1 ;
+      }
+   }
+
+   for (count=0; count<numStates; ++count) {
+      if ( (count % 5) == 0) sTaxes += "<tr> " ;
+      sTaxes += "<td align='center'> " + colorder[count][0] + " </td> <td align='right'> " +
+                                         colorder[count][1] + " </td> <TD>&nbsp;</TD>" ;
+      if ( ((count+1) % 5) == 0) sTaxes += "</tr> " ;
+   }
+   if ( ((count-1) % 5) != 0) sTaxes += "</tr> " ;
+
+   sTaxes += "</tbody> </table>" ;
+
+   document.getElementById("stateInfo").innerHTML = sTaxes ;
+}
+
+
+function compute()
+{
+    var acaFrac = [
+         [  16146.20, 0.0311 ],
+         [  18210.00, 0.0415 ],
+         [  24280.00, 0.0654 ],
+         [  30350.00, 0.0836 ],
+         [  36420.00, 0.0986 ],
+         [  48560.00, 0.0986 ]
+      ] ;
+
+    var f = document.taxcalc;  // This is the form we'll we working with.
+
+    if (sessionStorageExists()) {
+
+       if (sessionStorage.getItem("state") === null) {
+           sessionStorage.setItem("state", "0") ;
+       }
+
+       if (sessionStorage.getItem("state") == "1") {
+          if (f.doRetire.checked == false) {
+             /* restore previous values to form */
+             f.wage.value = Math.round(0.0) ;
+             f.simpinc.value = Math.round(0.0) ;
+             f.treasint.value = Math.round(0.0) ;
+             f.capdiv.value = Math.round(0.0) ;
+             f.ssincome.value = Math.round(0.0) ;
+             f.taxdefer.value = Math.round(0.0) ;
+             f.housing.value = Math.round(0.0) ;
+
+             f.wage.value =     sessionStorage.getItem("saveWage") ;
+             f.simpinc.value =  sessionStorage.getItem("saveSimp") ;
+             f.treasint.value = sessionStorage.getItem("saveTreas") ;
+             f.capdiv.value =   sessionStorage.getItem("saveCap") ;
+             f.ssincome.value = sessionStorage.getItem("saveSS") ;
+             f.taxdefer.value = sessionStorage.getItem("saveDefer") ;
+             f.housing.value =  sessionStorage.getItem("saveHousing") ;
+
+             sessionStorage.setItem("state", "0") ;
+          }
+          else {
+             f.noSS.checked      = ( (sessionStorage.getItem("saveSSflag") == "1") ? true : false ) ;
+             f.selfE.checked     = ( (sessionStorage.getItem("saveSelfEflag") == "1") ? true : false ) ;
+             f.nopayroll.checked = ( (sessionStorage.getItem("savenopayroll") == "1") ? true : false ) ;
+          }
+       }
+    }
+    else {
+       f.doRetire.checked = false ;
+       f.noSS.checked = false ;
+    }
+
+do {
+    var filingStatus = fedTax[f.status.value];
+
+    var wage = parseFloat(f.wage.value);
+    if (isNaN(wage)) { wage = 0.; }
+    f.wage.value = Math.round(wage);
+
+    var simpinc = parseFloat(f.simpinc.value);
+    if (isNaN(simpinc)) { simpinc = 0.; }
+    f.simpinc.value = Math.round(simpinc);
+
+    var income = wage + simpinc ;
+
+    var treasint = parseFloat(f.treasint.value);
+    if (isNaN(treasint)) { treasint = 0.; }
+    f.treasint.value = Math.round(treasint);
+
+    var capdiv = parseFloat(f.capdiv.value);
+    if (isNaN(capdiv)) { capdiv = 0.; }
+    f.capdiv.value = Math.round(capdiv);
+
+    var housing = parseFloat(f.housing.value);
+    if (isNaN(housing)) { housing = 0.; }
+
+    var payrollMult  = 0.0;
+    var ssincomemult = 0.0;
+    var ssincome = parseFloat(f.ssincome.value);
+    if (isNaN(ssincome)) { ssincome = 0.; }
+    f.ssincome.value = Math.round(ssincome);
+
+    var taxdefer = parseFloat(f.taxdefer.value);
+    if (isNaN(taxdefer)) { taxdefer = 0.; }
+    if (taxdefer > wage) taxdefer = wage ;
+    if (wage == 0.0) {
+       f.taxdefer.value = "N/A" ;
+    }
+    else {
+       f.taxdefer.value = Math.round(taxdefer);
+    }
+
+    // If you are self employed, you must pay payroll tax.
+
+//    if (f.selfE.checked) f.nopayroll.checked = false;
+
+    // NOTE -- the law says you pay SS tax if working, even if drawing SS income
+
+    if (ssincome > 0.0) {
+       // i.e. does taxdefer get subtracted from sstest here?
+       var sstest = income + treasint + capdiv + ( ssincome / 2.0 );
+       var  lowthresh = 25000.0;
+       var highthresh = 34000.0;
+
+       if (f.status.value == 'marriedJoint') {
+           lowthresh = 32000.0;
+          highthresh = 44000.0;
+       }
+
+       if ( sstest < lowthresh) {
+          ssincomemult = 0.0;
+       }
+       else if (sstest < highthresh) {
+          ssincomemult = 0.5;
+       }
+       else {
+          ssincomemult = 0.85
+       }
+    }
+
+    var schedule = filingStatus['taxTable'];
+    var capgainrate = 0.0 ;
+
+    // there is one more bracket above the following rate
+    // Need SS income here... I think.
+    var cgain = filingStatus['capGain'];
+    var testVal = income + treasint + capdiv ;
+    for(var k = cgain.length-1; k >= 0 ; --k) {
+        if (testVal <= (cgain[k])[0]) {
+          capgainrate = (cgain[k])[1] ;
+        }
+    }
+
+    // does an IRA contribution get an SS tax?  How about 401K?
+    // This may need adjustment based on tax deferred contribution
+    // figure out how the 0.9235 factor applies, precisely
+    var maxSSincome = wage;
+    if (maxSSincome > 128400.0) maxSSincome = 128400.0; // 2021
+
+    var  sstax = 0.0;
+    var medtax = 0.0;    
+    if ( (wage != 0.0) && (f.nopayroll.checked == false)) {
+       payrollMult = 1.0;
+       if (f.selfE.checked) payrollMult = 2.0*0.9235;
+       sstax  = payrollMult*maxSSincome*0.062;
+       medtax = payrollMult*wage*0.0145;
+    }
+    if ((wage == 0.0) || (f.nopayroll.checked == true) ) {
+       f.sstax.value  = "N/A";
+       f.medtax.value = "N/A";
+    }
+    else {
+       f.sstax.value  = Math.round(sstax);
+       f.medtax.value = Math.round(medtax);
+    }
+    
+    // line 2, the standard or itemized deduction
+    var deduction = 0.;
+    if (f.standard.checked) {
+        deduction = filingStatus['stdDeduction'];
+    }
+    else {
+        deduction = parseFloat(f.deduction.value);
+        if (isNaN(deduction)) deduction = 0.;
+        if (deduction < filingStatus['stdDeduction']) {
+            deduction = filingStatus['stdDeduction'];
+            f.standard.checked = true;
+        }
+    }
+    var adjustment = deduction ;
+    f.deduction.value = Math.round(deduction);
+    deduction += taxdefer ;
+    if (f.selfE.checked) {
+       deduction += (sstax + medtax)/2.0 + wage*0.20 /* sec199a */ ;
+       adjustment += wage*0.20 ;
+    }
+    f.feded.value = Math.round(deduction);
+
+    // Line 3: Subtract line 2 from line 1
+    var AGIest = income + treasint + ( ssincomemult*ssincome ) ;
+    f.fininc.value = Math.round(AGIest + capdiv) ;
+    var line3 = AGIest - deduction ;
+    if (line3 < 0) line3 = 0.;
+    f.line3.value = Math.round(line3);
+
+    /* have to add back the "below the line" deductions */
+    f.fedAGI.value = Math.round(line3 + adjustment) ;
+    
+
+    // Line 4: tax from schedules.
+    // determine which tax schedule to use, based on filing status
+
+    var tax      = 0.;
+    var base     = 0.;
+    // determine which tax bracket to use within that schedule
+    for(var i = 0; i < schedule.length; i++) {
+        if (line3 > (schedule[i])[0]) {
+            tax += ((schedule[i])[0] - base) * (schedule[i])[1];
+            base = (schedule[i])[0];
+        }
+        else {
+            tax += (line3 - base) * (schedule[i])[1];
+            break;
+        }
+    }
+    tax += capgainrate*capdiv;
+    var savercred = 0.;
+    if (line3 < filingStatus['scredthresh']) {
+      var scredmax = 1000.;
+      savercred = 0.5*taxdefer;
+      if (f.status.value == 'marriedJoint') {
+         scredmax = 2000.
+      }
+      if (savercred > scredmax) {
+        savercred = scredmax;
+      }
+      if (savercred > tax) {
+        savercred = tax;
+      }
+      savercred = Math.round(savercred);
+    }
+    tax -= savercred;
+    f.savercred.value = savercred;
+
+    f.tax.value = Math.round(tax);
+
+    f.totinc.value = Math.round(income + treasint + capdiv + ssincome) ;
+
+    f.takehome.value = Math.round(income + treasint + capdiv + ssincome -
+                                  tax - sstax - medtax - taxdefer - housing) ;
+
+    var takehome = f.takehome.value ;
+    if (sessionStorageExists()) {
+    if ( f.doRetire.checked && (sessionStorage.getItem("state") == "0") ) {
+       /* cache current form values */
+       sessionStorage.setItem("saveWage", f.wage.value) ;
+       sessionStorage.setItem("saveSimp", f.simpinc.value) ;
+       sessionStorage.setItem("saveTreas", f.treasint.value) ;
+       sessionStorage.setItem("saveCap", f.capdiv.value) ;
+       sessionStorage.setItem("saveSS", f.ssincome.value) ;
+       sessionStorage.setItem("saveDefer", f.taxdefer.value) ;
+       sessionStorage.setItem("saveHousing", f.housing.value) ;
+
+       sessionStorage.setItem("saveSSflag", (f.noSS.checked ? "1" : "0") ) ;
+       sessionStorage.setItem("saveSelfEflag", (f.selfE.checked ? "1" : "0") ) ;
+       sessionStorage.setItem("savenopayroll", (f.nopayroll.checked ? "1" : "0") ) ;
+
+       /* set new form values */
+       f.wage.value = Math.round(0.0) ;
+       f.simpinc.value = Math.round(0.0) ;
+       f.taxdefer.value = Math.round(0.0) ;
+
+       if (f.noSS.checked == false) {
+          var estSS = 0.707*wage/12.0 ;  // RMS estimate of monthly wage
+          var estSSincome = 0.0 ;
+          if (estSS >= 926.0) {
+             estSSincome = 833.40 ;
+             if (estSS >= 5583.0) {
+                estSSincome += 1490.24 + 0.15*(estSS - 5583.0);
+                if (estSSincome > 2788.0) {
+                   estSSincome = 2788.0 ;
+                }
+             }
+             else {
+                estSSincome += 0.32*(estSS - 926.0) ;
+             }
+          }
+          else {
+             estSSincome = 0.9*estSS ;
+          }
+          f.ssincome.value = Math.round(12.0*estSSincome) ;
+          takehome -= f.ssincome.value ;
+       }
+       else {
+          f.ssincome.value = Math.round(0.0) ;
+       }
+
+       if (takehome > 0.0) {
+          if (takehome > 12000.0) {
+             f.treasint.value = Math.round(12000.0) ;
+             takehome -= 12000.0 ;
+          }
+          else {
+             f.treasint.value = Math.round(takehome) ;
+             takehome = 0.0 ;
+          }
+       }
+       else {
+          f.treasint.value = Math.round(0.0) ;
+       }
+
+       if (takehome > 0.0) {
+          f.capdiv.value = Math.round(takehome/(1.0-capgainrate)) ;
+       }
+       else {
+          f.capdiv.value = Math.round(0.0) ;
+       }
+      
+       f.housing.value = "0 (owned)";
+
+       sessionStorage.setItem("state", "1") ;
+       continue ;
+    }
+    }
+    break ;
+} while(true) ;
+
+    f.aca.value = Math.round( 0.0 ) ;
+    // Is full SS income considered for ACA MAGI, or just taxable portion?
+    // Is ACA unavailable once SS income stream begins?
+    // Hack until ACA MAGI calculation is understood.
+    // capital gains income does not influence ACA in formula below
+    if (f.selfE.checked) AGIest -= (sstax + medtax)/2.0;
+    AGIest -= taxdefer;
+    AGIest += capdiv;
+    if ( AGIest < 16146.20 ) {
+       f.aca.value = 'Medicare';
+    }
+    else {
+       if ( AGIest < 48560. ) {
+          var fracMult = 0.0 ;
+          var lb, ub ;
+          for (var j=0; j < acaFrac.length ; j++) {
+             if (AGIest <= (acaFrac[j+1])[0]) {
+               break ;
+             }
+          }
+          lb = (acaFrac[j])[0] ;
+          ub = (acaFrac[j+1])[0] ;
+          fracMult = (acaFrac[j])[1] +
+                     ( (acaFrac[j+1])[1] - (acaFrac[j])[1] ) *
+                     (AGIest - lb)/( ub - lb) ;
+          f.aca.value = Math.round( fracMult*AGIest ) ;
+       }
+       else {
+          f.aca.value = 'No subsidy';
+       }
+    }
+}
+
+function hideshow()
+{
+    var i ;
+    var f = document.taxcalc;
+    var x = document.getElementsByClassName("hideme");
+
+    if (f.showDetails.checked) {
+       for (i = 0; i < x.length; i++) {
+          x[i].style.display = "table-row";
+       }
+    }
+    else {
+       for (i = 0; i < x.length; i++) {
+          x[i].style.display = "none";
+       }
+    }    
+}
+
+</SCRIPT>
+
+
+</HEAD>
+
+<BODY onload="compute();stateUpdate();">
+
+<H1>2021 U.S. Income Tax Estimator</H1>
+You only need to enter the data in the boldface fields.
+<P>
+<B><I>This program is an example only.<BR>Computing your actual income tax is
+almost always more complicated than this!</I></B>
+
+
+<FORM NAME="taxcalc">
+  <TABLE BORDER CELLPADDING=3>
+    <TR>
+      <TD COLSPAN=2 BGCOLOR="d0d0d0">
+        <B>Select your filing status:</B>
+        <select name="status" onChange="compute();stateUpdate()">
+          <option value='single' SELECTED> Single
+<!--      <option value='headHousehold'>   Head of Household           -->
+          <option value='marriedJoint'>    Married, Filing Jointly
+<!--      <option value='marriedSeparate'> Married, Filing Separately  -->
+        </SELECT>
+      </TD></TR>
+    <TR>
+      <TD BGCOLOR="d0d0d0"
+       TITLE="Money from employer, sole-proprietor income, etc">
+      <B>Enter wage income subject to payroll tax</B></TD>
+      <TD BGCOLOR="d0d0d0">
+        <INPUT TYPE=text NAME="wage" onChange="compute();stateUpdate()">
+      </TD></TR>
+    <TR>
+      <TD BGCOLOR="d0d0d0"
+       TITLE="Short-term capital gain, simple bank interest, simple rental income, etc">
+      <B>Enter simple non-wage income</B></TD>
+      <TD BGCOLOR="d0d0d0">
+        <INPUT TYPE=text NAME="simpinc" onChange="compute();stateUpdate()">
+      </TD></TR>
+    <TR>
+      <TD BGCOLOR="d0d0d0"><B>Enter annual Social Security income</B></TD>
+      <TD BGCOLOR="d0d0d0">
+        <INPUT TYPE=text NAME="ssincome" onChange="compute();stateUpdate()">
+      </TD>
+      </TR>
+    <TR>
+      <TD BGCOLOR="d0d0d0"><B>Enter long-term capital gains<BR>and qualified dividend income</B></TD>
+      <TD BGCOLOR="d0d0d0">
+        <INPUT TYPE=text NAME="capdiv" onChange="compute();stateUpdate()">
+      </TD></TR>
+    <TR>
+      <TD BGCOLOR="d0d0d0"><B>Enter Treasury bond interest</B></TD>
+      <TD BGCOLOR="d0d0d0">
+        <INPUT TYPE=text NAME="treasint" onChange="compute();stateUpdate()">
+      </TD></TR>
+    <TR>
+      <TD BGCOLOR="d0d0d0"><B>Tax deferred retirement contribution</B> (IRA, 401k, etc)</TD>
+      <TD BGCOLOR="d0d0d0">
+        <INPUT TYPE=text NAME="taxdefer" onChange="compute();stateUpdate()">
+      </TD>
+      </TR>
+    <TR>
+      <TD BGCOLOR="d0d0d0"
+       TITLE="Do not include property tax, HOA fees, insurance, maintenance, etc.">
+      <B>Annual rent or principal+interest paid</B></TD>
+      <TD BGCOLOR="d0d0d0">
+        <INPUT TYPE=text NAME="housing" onChange="compute();stateUpdate()">
+      </TD>
+      </TR>
+    <TR>
+      <TD BGCOLOR="d0d0d0">
+        <B>Check here 
+        <INPUT TYPE=checkbox NAME="standard" CHECKED onClick="compute()">
+        for the standard deduction,<BR>or enter your itemized deduction</B>
+      </TD>
+      <TD BGCOLOR="d0d0d0">
+        <INPUT TYPE=text NAME="deduction" 
+               onChange="this.form.standard.checked = false; compute()">
+      </TD></TR>
+    <TR>
+     <TD BGCOLOR="d0d0d0"
+      TITLE="Removing payroll tax is a way to approximate taxes
+in retirement while maintaining similar income streams">
+      disable payroll tax <INPUT TYPE=checkbox NAME="nopayroll" onClick="compute();stateUpdate()">
+      | self employed <INPUT TYPE=checkbox NAME="selfE" onClick="compute();stateUpdate()">
+      | show details <INPUT TYPE=checkbox NAME="showDetails" onclick="hideshow()">
+      </TD></TR>
+    <TR>
+     <TD BGCOLOR="d0d0d0"
+      TITLE="Shows how to draw income at retirement to minimize federal and state tax.
+Feature requires Javascript sessionStorage, which some browsers only provide
+by enabling third party cookies">
+      Retire at takehome pay <INPUT TYPE=checkbox NAME="doRetire" onClick="compute();stateUpdate()">
+      | state without SS <INPUT TYPE=checkbox NAME="noSS" onclick="compute();stateUpdate()">
+      </TD></TR>
+    <TR>
+      <TD align="center"><B>Federal take home pay</B><BR>(ACA and state tax must be subtracted separately)</TD>
+      <TD><INPUT TYPE=text NAME="takehome"></TD></TR>    
+    <TR>
+      <TD>estimated annual ACA premium</TD>
+      <TD><INPUT TYPE=text NAME="aca"></TD></TR>
+    <TR class="hideme" style="display:none">
+      <TD>Total income:</TD>
+      <TD><INPUT TYPE=text NAME="totinc"></TD></TR>
+    <TR class="hideme" style="display:none">
+      <TD>Final Federal income:</TD>
+      <TD><INPUT TYPE=text NAME="fininc"></TD></TR>
+    <TR class="hideme" style="display:none">
+      <TD>Federal Adjusted Gross Income:</TD>
+      <TD><INPUT TYPE=text NAME="fedAGI"></TD></TR>
+    <TR class="hideme" style="display:none">
+      <TD>Total Federal deductions:</TD>
+      <TD><INPUT TYPE=text NAME="feded"></TD></TR>
+    <TR class="hideme" style="display:none">
+      <TD>Final Federally taxable income:</TD>
+      <TD><INPUT TYPE=text NAME="line3"></TD></TR>
+    <TR class="hideme" style="display:none">
+      <TD>Savers credit</TD>
+      <TD><INPUT TYPE=text NAME="savercred"></TD></TR>
+    <TR>
+      <TD>Federal tax, from 2021 tax rate schedules<BR>plus capital gains taxes</TD>
+      <TD><INPUT TYPE=text NAME="tax"></TD></TR>
+    <TR class="hideme" style="display:none">
+      <TD>Social Security tax, employee portion</TD>
+      <TD><INPUT TYPE=text NAME="sstax"></TD></TR>
+    <TR class="hideme" style="display:none">
+      <TD>Medicare tax, employee portion</TD>
+      <TD><INPUT TYPE=text NAME="medtax"></TD></TR>
+    <TR>
+      <TD BGCOLOR="d0d0d0">
+      Sort states by tax <INPUT TYPE="radio" NAME="statesort" value="tax" onClick="stateUpdate()">
+      | Sort states alphabetically <INPUT TYPE="radio" NAME="statesort" value="alph" CHECKED onClick="stateUpdate()">
+      </TD></TR>
+  </TABLE>
+</FORM>
+
+<p id="stateInfo"></p>
+
+</BODY>
+</html>
