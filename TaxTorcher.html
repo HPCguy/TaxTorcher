@@ -1520,29 +1520,10 @@ do {
 
 //    if (f.selfE.checked) f.nopayroll.checked = false;
 
+    // base AGI value
+    var AGI = income + treasint + capdiv - taxdefer;
+
     // NOTE -- the law says you pay SS tax if working, even if drawing SS income
-
-    if (ssincome > 0.0) {
-       // i.e. does taxdefer get subtracted from sstest here?
-       var sstest = income + treasint + capdiv + ( ssincome / 2.0 );
-       var  lowthresh = 25000.0;
-       var highthresh = 34000.0;
-
-       if (f.status.value == 'marriedJoint') {
-           lowthresh = 32000.0;
-          highthresh = 44000.0;
-       }
-
-       if ( sstest < lowthresh) {
-          ssincomemult = 0.0;
-       }
-       else if (sstest < highthresh) {
-          ssincomemult = 0.5;
-       }
-       else {
-          ssincomemult = 0.85
-       }
-    }
 
     var schedule = filingStatus['taxTable'];
     var capgainrate = 0.0 ;
@@ -1560,6 +1541,7 @@ do {
     // does an IRA contribution get an SS tax?  How about 401K?
     // This may need adjustment based on tax deferred contribution
     // figure out how the 0.9235 factor applies, precisely
+    // This only computes payroll tax for one filer
     var maxSSincome = wage;
     if (maxSSincome > 128400.0) maxSSincome = 128400.0; // 2021
 
@@ -1593,24 +1575,43 @@ do {
             f.standard.checked = true;
         }
     }
-    var adjustment = deduction ;
     f.deduction.value = Math.round(deduction);
-    deduction += taxdefer ;
     if (f.selfE.checked) {
-       deduction += (sstax + medtax)/2.0 + wage*0.20 /* sec199a */ ;
-       adjustment += wage*0.20 ;
+       AGI -= (sstax + medtax)/2.0;
+       deduction += wage*0.20 /* sec199a */ ;
     }
     f.feded.value = Math.round(deduction);
 
+    if (ssincome > 0.0) {
+       var sstest = AGI + ( ssincome / 2.0 );
+       var  lowthresh = 25000.0;
+       var highthresh = 34000.0;
+
+       if (f.status.value == 'marriedJoint') {
+           lowthresh = 32000.0;
+          highthresh = 44000.0;
+       }
+
+       if ( sstest < lowthresh) {
+          ssincomemult = 0.0;
+       }
+       else if (sstest < highthresh) {
+          ssincomemult = 0.5;
+       }
+       else {
+          ssincomemult = 0.85
+       }
+    }
+
     // Line 3: Subtract line 2 from line 1
-    var AGIest = income + treasint + ( ssincomemult*ssincome ) ;
-    f.fininc.value = Math.round(AGIest + capdiv) ;
-    var line3 = AGIest - deduction ;
-    if (line3 < 0) line3 = 0.;
+    AGI += ssincomemult*ssincome;
+    f.fininc.value = Math.round(AGI) ;
+    var line3 = AGI - capdiv - deduction ;
+    if (line3 < 0.) line3 = 0.;
     f.line3.value = Math.round(line3);
 
     /* have to add back the "below the line" deductions */
-    f.fedAGI.value = Math.round(line3 + adjustment) ;
+    f.fedAGI.value = Math.round(AGI) ;
     
 
     // Line 4: tax from schedules.
@@ -1736,18 +1737,15 @@ do {
     // Is ACA unavailable once SS income stream begins?
     // Hack until ACA MAGI calculation is understood.
     // capital gains income does not influence ACA in formula below
-    if (f.selfE.checked) AGIest -= (sstax + medtax)/2.0;
-    AGIest -= taxdefer;
-    AGIest += capdiv;
-    if ( AGIest < 16146.20 ) {
+    if ( AGI < 16146.20 ) {
        f.aca.value = 'Medicare';
     }
     else {
-       if ( AGIest < 48560. ) {
+       if ( AGI < 48560. ) {
           var fracMult = 0.0 ;
           var lb, ub ;
           for (var j=0; j < acaFrac.length ; j++) {
-             if (AGIest <= (acaFrac[j+1])[0]) {
+             if (AGI <= (acaFrac[j+1])[0]) {
                break ;
              }
           }
@@ -1755,8 +1753,8 @@ do {
           ub = (acaFrac[j+1])[0] ;
           fracMult = (acaFrac[j])[1] +
                      ( (acaFrac[j+1])[1] - (acaFrac[j])[1] ) *
-                     (AGIest - lb)/( ub - lb) ;
-          f.aca.value = Math.round( fracMult*AGIest ) ;
+                     (AGI - lb)/( ub - lb) ;
+          f.aca.value = Math.round( fracMult*AGI ) ;
        }
        else {
           f.aca.value = 'No subsidy';
@@ -1790,7 +1788,9 @@ function hideshow()
 <BODY onload="compute();stateUpdate();">
 
 <H1>2021 U.S. Income Tax Estimator</H1>
-You only need to enter the data in the boldface fields.
+You only need to enter the data in the boldface fields.<P>For simplicity,
+the calculator assumes only one filer is subject to payroll tax.<BR>This works fine
+when joint married income is less than the annual max payroll tax threshold. 
 <P>
 <B><I>This program is an example only.<BR>Computing your actual income tax is
 almost always more complicated than this!</I></B>
