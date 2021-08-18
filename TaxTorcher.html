@@ -945,28 +945,26 @@ var stateTax = {
    OH : {
       s : {
          d   :     0.,
-         e   : -2350.,
-         dep : -2350.,
+         e   : -2150.,
+         dep : -2150.,
          t : [
-            [  22150., 0.0     ],
-            [  44250., 0.02850 ],
-            [  88450., 0.03326 ],
-            [ 110650., 0.03802 ],
-            [ 221300., 0.04413 ],
-            [   1.e12, 0.04797 ]
+            [  25000., 0.0     ],
+            [  44250., 0.02765 ],
+            [  88450., 0.03226 ],
+            [ 110650., 0.03688 ],
+            [   1.e12, 0.03990 ]
          ]
       },
       m : {
          d   :     0.,
-         e   : -4700.,
-         dep : -2350.,
+         e   : -4300.,
+         dep : -2150.,
          t : [
-            [  22150., 0.0     ],
-            [  44250., 0.02850 ],
-            [  88450., 0.03326 ],
-            [ 110650., 0.03802 ],
-            [ 221300., 0.04413 ],
-            [   1.e12, 0.04797 ]
+            [  25000., 0.0     ],
+            [  44250., 0.02765 ],
+            [  88450., 0.03226 ],
+            [ 110650., 0.03688 ],
+            [   1.e12, 0.03990 ]
          ]
       }
    },
@@ -1788,9 +1786,10 @@ function hideshow()
 <BODY onload="compute();stateUpdate();">
 
 <H1>2021 U.S. Income Tax Estimator</H1>
-You only need to enter the data in the boldface fields.<P>For simplicity,
-the calculator assumes only one filer is subject to payroll tax.<BR>This works fine
-when joint wage income is less than the annual max payroll tax threshold. 
+You only need to enter the data in the boldface fields.
+<P>For simplicity, the calculator assumes only one filer is
+subject to payroll tax.  This works fine when joint wage
+income is less than the annual max payroll tax threshold. 
 <P>
 <B><I>This program is an example only.<BR>Computing your actual income tax is
 almost always more complicated than this!</I></B>
