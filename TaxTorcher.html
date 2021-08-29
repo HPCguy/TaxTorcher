@@ -1326,8 +1326,8 @@ var sTaxes =
 
    var f2 = document.taxcalc;  // This is the form we'll we working with.
 
+   var AGI = parseFloat(f2.fininc.value) ;
    var   wage = parseFloat(f2.wage.value) ;
-   var income = wage + parseFloat(f2.simpinc.value) ;
 
    // filestatus is wrong for headHousehold
    var fileStatus = ( ( f2.status.value == 'marriedJoint' ) ? 'm' : 's' ) ;
@@ -1338,21 +1338,45 @@ var sTaxes =
       var sObj = stateTax[key] ;
       var tObj = sObj[fileStatus] ;
       var sched = tObj['t'] ;
-      var treasint = parseFloat(f2.treasint.value);
-      var capdiv = parseFloat(f2.capdiv.value);
-      var taxdefer = ( (wage == 0.0) ? 0.0 : parseFloat(f2.taxdefer.value) );
-
-      var eTax = ( income + capdiv - tObj['d'] - taxdefer) ;
+      var eTax = AGI - tObj['d'] ;
+      var ssincome = parseFloat(f2.ssincome.value) ;
+/*
       eTax += ( ((sObj["taxSS"] == true) && (f2.noSS.checked == false)) ? parseFloat(f2.ssincome.value) : 0.0 ) ; 
+*/
+      var ssincomemult = 0.0;
+      if (ssincome > 0.0) {
+         var sstest = AGI + ( ssincome / 2.0 );
+         var  lowthresh = 25000.0;
+         var highthresh = 34000.0;
+
+         if (f2.status.value == 'marriedJoint') {
+             lowthresh = 32000.0;
+            highthresh = 44000.0;
+         }
+
+         if ( sstest < lowthresh) {
+            ssincomemult = 0.0;
+         }
+         else if (sstest < highthresh) {
+            ssincomemult = 0.5;
+         }
+         else {
+            ssincomemult = 0.85
+         }
+      }
+
+      eTax -= ( (sObj["taxSS"] != true) ? ssincomemult*ssincome : 0.0 ) ; 
 
       // Self employment payroll tax adjustment 
 
+/*
       var maxSSincome = wage*0.9235; // this line only applies to self employment,so OK
       if (maxSSincome > 128400.0) maxSSincome = 128400.0; // 2021 tax year
 
       if (f2.selfE.checked) {
          eTax -= (maxSSincome*0.062 + wage*0.0145*0.9235) ;
       }
+*/
 
       var fTax      = 0.;
       var fBase     = 0.;
