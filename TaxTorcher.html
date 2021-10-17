@@ -1378,6 +1378,8 @@ var sTaxes =
       }
 */
 
+      eTax -= parseFloat(f2.treasint.value) ; // not state taxable
+
       var fTax      = 0.;
       var fBase     = 0.;
       var fExempt   = tObj['e'];  /* < 0.0 applied to income, > 0.0 applied to tax */
@@ -1396,7 +1398,7 @@ var sTaxes =
         }
         if (fExempt > 0.0) fTax -= fExempt ;
       }
-      
+
       if (fTax < 0.0) fTax = 0.0 ;
       fTax = Math.round(fTax) ;
 
