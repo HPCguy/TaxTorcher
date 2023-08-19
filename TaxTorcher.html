@@ -1191,7 +1191,6 @@ var stateTax = {
       }
    },
    WV : {
-      taxSS : true,
       s : {
          d   :     0.,
          e   : -2000.,
@@ -1288,7 +1287,9 @@ var sTaxes =
    var f2 = document.taxcalc;  // This is the form we'll we working with.
 
    var AGI = parseFloat(f2.fininc.value) ;
-   var   wage = parseFloat(f2.wage.value) ;
+   var fAGI = parseFloat(f2.fedAGI.value) ;
+   var taxableSS = 0.0;
+   var wage = parseFloat(f2.wage.value) ;
 
    // filestatus is wrong for headHousehold
    var fileStatus = ( ( f2.status.value == 'marriedJoint' ) ? 'm' : 's' ) ;
@@ -1301,40 +1302,15 @@ var sTaxes =
       var sched = tObj['t'] ;
       var eTax = AGI - tObj['d'] ;
       var ssincome = parseFloat(f2.ssincome.value) ;
-/*
-      eTax += ( ((sObj["taxSS"] == true) && (f2.noSS.checked == false)) ? parseFloat(f2.ssincome.value) : 0.0 ) ; 
-*/
-      var ssincomemult = 0.0;
-      if (ssincome > 0.0) {
-         var sstest = AGI + ( ssincome / 2.0 );
-         var  lowthresh = 25000.0;
-         var highthresh = 34000.0;
 
-         if (f2.status.value == 'marriedJoint') {
-             lowthresh = 32000.0;
-            highthresh = 44000.0;
-         }
-
-         if ( sstest < lowthresh) {
-            ssincomemult = 0.0;
-         }
-         else if (sstest < highthresh) {
-            ssincomemult = 0.5;
-         }
-         else {
-            ssincomemult = 0.85
-         }
-      }
-
-      eTax -= ( (sObj["taxSS"] != true) ? ssincomemult*ssincome : 0.0 ) ; 
+      eTax += ( ((sObj["taxSS"] == true) && (f2.noSS.checked == false)) ? (fAGI - AGI) : 0.0 ) ; 
 
       // Self employment payroll tax adjustment 
 
 /*
-      var maxSSincome = wage*0.9235; // this line only applies to self employment,so OK
-      if (maxSSincome > 160200.0) maxSSincome = 160200.0; // 2023 tax year
-
       if (f2.selfE.checked) {
+         var maxSSincome = wage*0.9235; // this line only applies to self employment,so OK
+         if (maxSSincome > 160200.0) maxSSincome = 160200.0; // 2023 tax year
          eTax -= (maxSSincome*0.062 + wage*0.0145*0.9235) ;
       }
 */
@@ -1397,13 +1373,16 @@ var sTaxes =
 
    for (count=0; count<numStates; ++count) {
       if ( (count % 5) == 0) sTaxes += "<tr> " ;
-      sTaxes += "<td align='center'> " + colorder[count][0] + " </td> <td align='right'> " +
+      sTaxes += "<td align='center'> " + colorder[count][0] +
+          ( ( (stateTax[colorder[count][0]])["taxSS"] == true ) ? "*" : " " ) +
+                                         " </td> <td align='right'> " +
                                          colorder[count][1] + " </td> <TD>&nbsp;</TD>" ;
       if ( ((count+1) % 5) == 0) sTaxes += "</tr> " ;
    }
    if ( ((count-1) % 5) != 0) sTaxes += "</tr> " ;
 
    sTaxes += "</tbody> </table>" ;
+   sTaxes += "<P> &#42 States that tax Social Security benefits." ;
 
    document.getElementById("stateInfo").innerHTML = sTaxes ;
 }
@@ -1488,7 +1467,6 @@ do {
     if (isNaN(housing)) { housing = 0.; }
 
     var payrollMult  = 0.0;
-    var ssincomemult = 0.0;
     var ssincome = parseFloat(f.ssincome.value);
     if (isNaN(ssincome)) { ssincome = 0.; }
     f.ssincome.value = Math.round(ssincome);
@@ -1509,6 +1487,7 @@ do {
 
     // base AGI value
     var AGI = income + treasint + capdiv - taxdefer;
+    var taxableSS = 0.0;
 
     // NOTE -- the law says you pay SS tax if working, even if drawing SS income
 
@@ -1532,7 +1511,7 @@ do {
     var maxSSincome = wage;
     if (maxSSincome > 160200.0) maxSSincome = 160200.0; // 2023
 
-    var  sstax = 0.0;
+    var sstax = 0.0;
     var medtax = 0.0;    
     if ( (wage != 0.0) && (f.nopayroll.checked == false)) {
        payrollMult = 1.0;
@@ -1570,7 +1549,7 @@ do {
     f.feded.value = Math.round(deduction);
 
     if (ssincome > 0.0) {
-       var sstest = AGI + ( ssincome / 2.0 );
+       var provinc = AGI + ( ssincome / 2.0 );
        var  lowthresh = 25000.0;
        var highthresh = 34000.0;
 
@@ -1579,27 +1558,27 @@ do {
           highthresh = 44000.0;
        }
 
-       if ( sstest < lowthresh) {
-          ssincomemult = 0.0;
+       if ( provinc < lowthresh ) {
+          taxableSS = 0.0;
        }
-       else if (sstest < highthresh) {
-          ssincomemult = 0.5;
+       else if (provinc < highthresh) {
+          taxableSS = ( provinc - lowthresh ) * 0.5;
        }
        else {
-          ssincomemult = 0.85
+          taxableSS = ( highthresh - lowthresh ) * 0.5 + ( provinc - highthresh) * 0.85
        }
     }
 
-    // Line 3: Subtract line 2 from line 1
-    AGI += ssincomemult*ssincome;
+    /* have to add back the "below the line" deductions */
     f.fininc.value = Math.round(AGI) ;
+    
+    // Line 3: Subtract line 2 from line 1
+    AGI += taxableSS;
+    f.fedAGI.value = Math.round(AGI) ;
     var line3 = AGI - capdiv - deduction ;
     if (line3 < 0.) line3 = 0.;
     f.line3.value = Math.round(line3);
 
-    /* have to add back the "below the line" deductions */
-    f.fedAGI.value = Math.round(AGI) ;
-    
 
     // Line 4: tax from schedules.
     // determine which tax schedule to use, based on filing status
