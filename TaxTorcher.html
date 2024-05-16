@@ -1079,7 +1079,8 @@ var stateTax = {
          dep : 1941.,
          t : [
             [ 1.e12, 0.0465 ]
-         ]
+         ],
+         pob : 16742.
       },
       m : {
          d   : 0.,
@@ -1087,7 +1088,8 @@ var stateTax = {
          dep : 1941.,
          t : [
             [ 1.e12, 0.0465 ]
-         ]
+         ],
+         pob : 33484.
       }
    },
    VT : {
@@ -1299,6 +1301,11 @@ var sTaxes =
               fTax += (eTax - fBase) * (sched[j])[1];
               break;
           }
+        }
+        if (key == 'UT') {
+          factor = (eTax - tObj['pob']) * 0.013;
+          if (factor > 0.0) fExempt -= factor;
+          if (fExempt < 0.0) fExempt = 0.0;
         }
         if (fExempt > 0.0) fTax -= fExempt ;
       }
