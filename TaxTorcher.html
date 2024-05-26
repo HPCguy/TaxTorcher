@@ -1523,7 +1523,8 @@ do {
     f.feded.value = Math.round(deduction);
 
     if (ssincome > 0.0) {
-       var provinc = AGI + ( ssincome / 2.0 );
+       var line2 = ( ssincome / 2.0 );
+       var provinc = AGI + line2;
        var  lowthresh = 25000.0;
        var highthresh = 34000.0;
 
@@ -1535,11 +1536,17 @@ do {
        if ( provinc < lowthresh ) {
           taxableSS = 0.0;
        }
-       else if (provinc < highthresh) {
-          taxableSS = ( provinc - lowthresh ) * 0.5;
-       }
        else {
-          taxableSS = ( highthresh - lowthresh ) * 0.5 + ( provinc - highthresh) * 0.85
+          var line9 = provinc - lowthresh;
+          var line10 = highthresh - lowthresh;
+          var line11 = line9 - line10;
+          if (line11 < 0.0) line11 = 0.0;
+          var line12 = ( line9 < line10 ) ? line9 : line10;
+          var line13 = 0.5 * line12;
+          var line14 = ( line13 < line2 ) ? line13 : line2;
+          var line16 = line14 + ( line11 * 0.85 );
+          var line17 = ssincome * 0.85;
+          taxableSS = ( line16 < line17 ) ? line16 : line17;
        }
     }
 
