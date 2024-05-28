@@ -1268,8 +1268,10 @@ var sTaxes =
       var tObj = sObj[fileStatus] ;
       var sched = tObj['t'] ;
       var eTax = AGI - tObj['d'] ;
+      eTax -= parseFloat(f2.treasint.value) ; // not state taxable
       var ssincome = parseFloat(f2.ssincome.value) ;
 
+      // Do states tax raw ssincome, or this adjusted amount?
       eTax += ( ((sObj["taxSS"] == true) && (f2.noSS.checked == false)) ? (fAGI - AGI) : 0.0 ) ; 
 
       // Self employment payroll tax adjustment 
@@ -1281,8 +1283,6 @@ var sTaxes =
          eTax -= (maxSSincome*0.062 + wage*0.0145*0.9235) ;
       }
 */
-
-      eTax -= parseFloat(f2.treasint.value) ; // not state taxable
 
       var fTax      = 0.;
       var fBase     = 0.;
