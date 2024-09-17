@@ -1463,19 +1463,6 @@ do {
 
     // NOTE -- the law says you pay SS tax if working, even if drawing SS income
 
-    var schedule = filingStatus['taxTable'];
-    var capgainrate = 0.0 ;
-
-    // there is one more bracket above the following rate
-    // Need SS income here... I think.
-    var cgain = filingStatus['capGain'];
-    var testVal = income + treasint + capdiv ;
-    for(var k = cgain.length-1; k >= 0 ; --k) {
-        if (testVal <= (cgain[k])[0]) {
-          capgainrate = (cgain[k])[1] ;
-        }
-    }
-
     // does an IRA contribution get an SS tax?  How about 401K?
     // This may need adjustment based on tax deferred contribution
     // figure out how the 0.9235 factor applies, precisely
@@ -1557,6 +1544,19 @@ do {
     var line3 = AGI - capdiv - deduction ;
     if (line3 < 0.) line3 = 0.;
     f.line3.value = Math.round(line3);
+
+    var schedule = filingStatus['taxTable'];
+    var capgainrate = 0.0 ;
+
+    // there is one more bracket above the following rate
+    var cgain = filingStatus['capGain'];
+    // var testVal = income + treasint + capdiv ;
+    var testVal = income + taxableSS + treasint + capdiv ;
+    for(var k = cgain.length-1; k >= 0 ; --k) {
+        if (testVal <= (cgain[k])[0]) {
+          capgainrate = (cgain[k])[1] ;
+        }
+    }
 
 
     // Line 4: tax from schedules.
