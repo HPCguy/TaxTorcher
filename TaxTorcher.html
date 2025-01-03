@@ -1763,7 +1763,7 @@ almost always more complicated than this!</I></B>
       </TD></TR>
     <TR>
       <TD BGCOLOR="d0d0d0"
-       TITLE="Short-term capital gain, simple bank interest, simple rental income, etc">
+       TITLE="Short-term capital gain, simple bank interest, simple rental income, pension/IRA/401(k) income, etc">
       <B>Enter simple non-wage income</B></TD>
       <TD BGCOLOR="d0d0d0">
         <INPUT TYPE=text NAME="simpinc" onChange="compute();stateUpdate()">
@@ -1793,7 +1793,7 @@ almost always more complicated than this!</I></B>
     <TR>
       <TD BGCOLOR="d0d0d0"
        TITLE="Do not include property tax, HOA fees, insurance, maintenance, etc.">
-      <B>Annual rent or principal+interest paid</B></TD>
+      <B>Annual primary residence rent<BR>or mortgage principal+interest paid</B></TD>
       <TD BGCOLOR="d0d0d0">
         <INPUT TYPE=text NAME="housing" onChange="compute();stateUpdate()">
       </TD>
@@ -1825,7 +1825,11 @@ by enabling third party cookies">
       | state without SS <INPUT TYPE=checkbox NAME="noSS" onclick="compute();stateUpdate()">
       </TD></TR>
     <TR>
-      <TD align="center"><B>Federal take home pay</B><BR>(ACA and state tax must be subtracted separately)</TD>
+      <TD align="center"><B>Total income</B></TD>
+      <TD><INPUT TYPE=text NAME="totinc"></TD></TR>
+    <TR>
+      <TD align="center"><B>Net discretionary income (aka takehome pay)</B>
+        <BR>(ACA and state tax must be subtracted separately)</TD>
       <TD><INPUT TYPE=text NAME="takehome"></TD></TR>    
     <TR>
       <TD>estimated annual ACA premium</TD>
