@@ -1,6 +1,6 @@
 # TaxTorcher
 
-Copilot summary
+Copilot Summary
 ===============
 The current code includes:
 
@@ -10,7 +10,7 @@ The current code includes:
  - Calculates the tax impact of these income sources.
  - Suggests portfolio allocation for retirement.
 
-My SUmmary
+My Summary
 ==========
 Estimates taxes across states for retirement relocation tradeoffs
 
