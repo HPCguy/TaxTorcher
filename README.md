@@ -9,6 +9,7 @@ The current code includes:
  - Handles different sources of retirement income (e.g., pensions, social security, retirement accounts).
  - Calculates the tax impact of these income sources.
  - Suggests portfolio allocation for retirement.
+ - sole-proprietor, wage earner, and retirement income supported. (NOT SEEN by Copilot, but it is in there).
 
 My Summary
 ==========
