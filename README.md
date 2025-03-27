@@ -1,7 +1,7 @@
 # TaxTorcher
 
-Copilot Summary
-===============
+Copilot's Project Summary
+=========================
 The current code includes:
 
  - Federal tax information for different filing statuses.
@@ -22,3 +22,7 @@ It matches professional tax software result for my specific tax situation but mi
 Run html:
 
 https://htmlpreview.github.io/?https://github.com/HPCguy/TaxTorcher/blob/main/TaxTorcher.html
+
+Thanks to taxfoundation.org for it's state level income tax data that saved me several hours of work:
+
+https://taxfoundation.org/data/all/state/state-income-tax-rates/
