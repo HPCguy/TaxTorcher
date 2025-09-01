@@ -29,9 +29,8 @@ var fedTax = {
          [   1.e12, 0.37 ]
       ],
       capGain : [
-         [  48350., 0.00 ],
-         [ 533400., 0.15 ],
-         [   1.e12, 0.20 ]
+         [  48350., 0.15 ],
+         [ 533400., 0.20 ]
       ]
    },
    headHousehold : {
@@ -47,9 +46,8 @@ var fedTax = {
          [   1.e12, 0.37 ]
       ],
       capGain : [
-         [  64750., 0.00 ],
-         [ 566700., 0.15 ],
-         [   1.e12, 0.20 ]
+         [  64750., 0.15 ],
+         [ 566700., 0.20 ]
       ]
    },
    marriedSeparate : {
@@ -65,9 +63,8 @@ var fedTax = {
          [   1.e12, 0.37 ]
       ],
       capGain : [
-         [  48350., 0.00 ],
-         [ 300000., 0.15 ],
-         [   1.e12, 0.20 ]
+         [  48350., 0.15 ],
+         [ 300000., 0.20 ]
       ]
    },
    marriedJoint : {
@@ -83,9 +80,8 @@ var fedTax = {
          [   1.e12, 0.37 ]
       ],
       capGain : [
-         [  96700., 0.00 ],
-         [ 600050., 0.15 ],
-         [   1.e12, 0.20 ]
+         [  96700., 0.15 ],
+         [ 600050., 0.20 ]
       ]
    }
 };
@@ -1247,6 +1243,7 @@ var sTaxes =
 
    var AGI = parseFloat(f2.fininc.value) ;
    var fAGI = parseFloat(f2.fedAGI.value) ;
+   var capdiv = parseFloat(f2.capdiv.value) ;
    var wage = parseFloat(f2.wage.value) ;
 
    // filestatus is wrong for headHousehold
@@ -1258,7 +1255,7 @@ var sTaxes =
       var sObj = stateTax[key] ;
       var tObj = sObj[fileStatus] ;
       var sched = tObj['t'] ;
-      var eTax = AGI - tObj['d'] ;
+      var eTax = AGI + capdiv - tObj['d'] ; // pretend all states tax capgain income
       eTax -= parseFloat(f2.treasint.value) ; // not state taxable
 
       // Do states tax raw ssincome, or this adjusted amount?
@@ -1276,7 +1273,7 @@ var sTaxes =
 
       var fTax      = 0.;
       var fBase     = 0.;
-      var fExempt   = tObj['e'];  /* < 0.0 applied to income, > 0.0 applied to tax */
+      var fExempt   = tObj['e'];  // < 0.0 applied to income, > 0.0 applied to tax
 
       if (fExempt < 0.0) eTax += fExempt ;
       if (eTax > 0.0) {
@@ -1305,7 +1302,7 @@ var sTaxes =
       ++count ;
    }
 
-   /* sort stateArray by tax amount */
+   // sort stateArray by tax amount
    if (f2.statesort.value == 'tax') {
       var place ;
       for (count=numStates-1; count>0; --count) {
@@ -1372,7 +1369,7 @@ function compute()
 
        if (sessionStorage.getItem("state") == "1") {
           if (f.doRetire.checked == false) {
-             /* restore previous values to form */
+             // restore previous values to form
              f.wage.value = Math.round(0.0) ;
              f.simpinc.value = Math.round(0.0) ;
              f.treasint.value = Math.round(0.0) ;
@@ -1447,7 +1444,7 @@ do {
 //    if (f.selfE.checked) f.nopayroll.checked = false;
 
     // base AGI value
-    var AGI = income + treasint + capdiv - taxdefer;
+    var AGI = income + treasint - taxdefer;
     var taxableSS = 0.0;
 
     // NOTE -- the law says you pay SS tax if working, even if drawing SS income
@@ -1492,7 +1489,7 @@ do {
     f.deduction.value = Math.round(deduction);
     if (f.selfE.checked) {
        AGI -= (sstax + medtax)/2.0;
-       deduction += wage*0.20 /* sec199a */ ;
+       deduction += wage*0.20 ; // sec199a
     }
     f.feded.value = Math.round(deduction);
 
@@ -1524,29 +1521,32 @@ do {
        }
     }
 
-    /* have to add back the "below the line" deductions */
+    // have to add back the "below the line" deductions
     f.fininc.value = Math.round(AGI) ;
 
     // Line 3: Subtract line 2 from line 1
     AGI += taxableSS;
     f.fedAGI.value = Math.round(AGI) ;
-    var line3 = AGI - capdiv - deduction ;
+    var line3 = AGI - deduction ;
     if (line3 < 0.) line3 = 0.;
     f.line3.value = Math.round(line3);
 
     var schedule = filingStatus['taxTable'];
-    var capgainrate = 0.0 ;
+    var capgaintax = 0.0 ;
 
     // there is one more bracket above the following rate
     var cgain = filingStatus['capGain'];
-    // var testVal = income + treasint + capdiv ;
-    var testVal = income + taxableSS + treasint + capdiv ;
-    for(var k = cgain.length-1; k >= 0 ; --k) {
-        if (testVal <= (cgain[k])[0]) {
-          capgainrate = (cgain[k])[1] ;
+    if (AGI + capdiv > (cgain[0])[0]) {
+        var capamt = capdiv - ((cgain[0])[0] - AGI) ;
+        var capamt2 = (cgain[1])[0] - (cgain[0])[0] ;
+        if (capamt < capamt2) {
+            capgaintax = capamt * (cgain[0])[1] ;
+        }
+        else {
+            capgaintax = capamt2 * (cgain[0])[1] +
+                         (capamt - capamt2) * (cgain[1])[1] ;
         }
     }
-
 
     // Line 4: tax from schedules.
     // determine which tax schedule to use, based on filing status
@@ -1564,9 +1564,8 @@ do {
             break;
         }
     }
-    tax += capgainrate*capdiv;
     var savercred = 0.;
-    if (line3 < filingStatus['scredthresh']) {
+    if (line3 + capdiv < filingStatus['scredthresh']) {
       var scredmax = 1000.;
       savercred = 0.5*taxdefer;
       if (f.status.value == 'marriedJoint') {
@@ -1581,6 +1580,7 @@ do {
       savercred = Math.round(savercred);
     }
     tax -= savercred;
+    tax += capgaintax;
     f.savercred.value = savercred;
 
     f.tax.value = Math.round(tax);
@@ -1593,7 +1593,7 @@ do {
     var takehome = f.takehome.value ;
     if (sessionStorageExists()) {
     if ( f.doRetire.checked && (sessionStorage.getItem("state") == "0") ) {
-       /* cache current form values */
+       // cache current form values
        sessionStorage.setItem("saveWage", f.wage.value) ;
        sessionStorage.setItem("saveSimp", f.simpinc.value) ;
        sessionStorage.setItem("saveTreas", f.treasint.value) ;
@@ -1606,7 +1606,7 @@ do {
        sessionStorage.setItem("saveSelfEflag", (f.selfE.checked ? "1" : "0") ) ;
        sessionStorage.setItem("savenopayroll", (f.nopayroll.checked ? "1" : "0") ) ;
 
-       /* set new form values */
+       // set new form values
        f.wage.value = Math.round(0.0) ;
        f.simpinc.value = Math.round(0.0) ;
        f.taxdefer.value = Math.round(0.0) ;
@@ -1651,7 +1651,7 @@ do {
        }
 
        if (takehome > 0.0) {
-          f.capdiv.value = Math.round(takehome/(1.0-capgainrate)) ;
+          f.capdiv.value = Math.round(takehome/(1.0-0.15)) ; // estimate -- improve
        }
        else {
           f.capdiv.value = Math.round(0.0) ;
