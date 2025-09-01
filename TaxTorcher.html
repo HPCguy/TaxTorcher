@@ -1400,6 +1400,8 @@ function compute()
        f.noSS.checked = false ;
     }
 
+    var acaincome = 0.0 ;
+
 do {
     var filingStatus = fedTax[f.status.value];
 
@@ -1495,7 +1497,7 @@ do {
 
     if (ssincome > 0.0) {
        var line2 = ( ssincome / 2.0 );
-       var provinc = AGI + line2;
+       var provinc = AGI + capdiv + line2;
        var  lowthresh = 25000.0;
        var highthresh = 34000.0;
 
@@ -1565,12 +1567,12 @@ do {
         }
     }
     var savercred = 0.;
-    if (line3 + capdiv < filingStatus['scredthresh']) {
+    if (AGI + capdiv < filingStatus['scredthresh']) {
       var scredmax = 1000.;
-      savercred = 0.5*taxdefer;
       if (f.status.value == 'marriedJoint') {
          scredmax = 2000.
       }
+      savercred = 0.5*taxdefer;
       if (savercred > scredmax) {
         savercred = scredmax;
       }
@@ -1651,7 +1653,7 @@ do {
        }
 
        if (takehome > 0.0) {
-          f.capdiv.value = Math.round(takehome/(1.0-0.15)) ; // estimate -- improve
+          f.capdiv.value = Math.round(takehome) ; // improvable estimate
        }
        else {
           f.capdiv.value = Math.round(0.0) ;
@@ -1663,6 +1665,7 @@ do {
        continue ;
     }
     }
+    acaincome = AGI + capdiv ;
     break ;
 } while(true) ;
 
@@ -1672,16 +1675,16 @@ do {
     // Hack until ACA MAGI calculation is understood.
     // capital gains income does not influence ACA in formula below
     var acamult = ( ( f.status.value == 'marriedJoint' ) ? 1.35 : 1.0 ) ;
-    if ( AGI < 21597.0 * acamult ) {
+    if ( acaincome < 21597.0 * acamult ) {
        f.aca.value = 'Medicare';
     }
     else {
        // only account for one or two person household
-       // if ( AGI < ( (acaFrac[5])[0] ) * acamult ) {
+       // if ( acaincome < ( (acaFrac[5])[0] ) * acamult ) {
           var fracMult = 0.0 ;
           var lb, ub ;
           for (var j=0; j < acaFrac.length ; j++) {
-             if (AGI <= ( (acaFrac[j])[0] ) * acamult) {
+             if (acaincome <= ( (acaFrac[j])[0] ) * acamult) {
                break ;
              }
           }
@@ -1690,12 +1693,12 @@ do {
              ub = ( (acaFrac[j])[0] ) * acamult ;
              fracMult = (acaFrac[j-1])[1] +
                         ( (acaFrac[j])[1] - (acaFrac[j-1])[1] ) *
-                        (AGI - lb)/( ub - lb) ;
+                        (acaincome - lb)/( ub - lb) ;
           }
           if ( j == acaFrac.length ) {
              fracMult = (acaFrac[j-1])[1] ;
           }
-          f.aca.value = Math.round( fracMult*AGI ) ;
+          f.aca.value = Math.round( fracMult*acaincome ) ;
        // }
        // else {
        //    f.aca.value = 'No subsidy';
