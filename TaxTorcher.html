@@ -132,7 +132,7 @@ var stateTax = {
    },
    AZ : {
       s : {
-         d   : 15000.,
+         d   : 15750.,
          e   : 0.,
          dep : -100.,
          t : [
@@ -140,7 +140,7 @@ var stateTax = {
          ]
       },
       m : {
-         d   : 30000.,
+         d   : 31500.,
          e   : 0.,
          dep : -100.,
          t : [
@@ -207,7 +207,7 @@ var stateTax = {
    CO : {
       taxSS : true,
       s : {
-         d   : 15000.,
+         d   : 15750.,
          e   : 0.,
          dep : 0.,
          t : [
@@ -215,7 +215,7 @@ var stateTax = {
          ]
       },
       m : {
-         d   : 30000.,
+         d   : 31500.,
          e   : 0.,
          dep : 0.,
          t : [
@@ -288,7 +288,7 @@ var stateTax = {
    },
    DC : {
       s : {
-         d   : 15000.,
+         d   : 15750.,
          e   :     0.,
          dep :     0.,
          t : [
@@ -302,7 +302,7 @@ var stateTax = {
          ]
       },
       m : {
-         d   : 30000.,
+         d   : 31500.,
          e   :     0.,
          dep :     0.,
          t : [
@@ -394,7 +394,7 @@ var stateTax = {
    },
    ID : {
       s : {
-         d   : 15000.,
+         d   : 15750.,
          e   :    0.,
          dep :    0.,
          t : [
@@ -403,7 +403,7 @@ var stateTax = {
          ]
       },
       m : {
-         d   : 30000.,
+         d   : 31500.,
          e   :     0.,
          dep :     0.,
          t : [
@@ -495,7 +495,7 @@ var stateTax = {
    },
    ME : {
       s : {
-         d   : 15000.,
+         d   : 15750.,
          e   : -5150.,
          dep :   300.,
          t : [
@@ -505,7 +505,7 @@ var stateTax = {
          ]
       },
       m : {
-         d   :  30000.,
+         d   :  31500.,
          e   : -10300.,
          dep :    300.,
          t : [
@@ -619,7 +619,7 @@ var stateTax = {
    },
    MO : {
       s : {
-         d   : 15000.,
+         d   : 15750.,
          e   :     0.,
          dep :     0.,
          t : [
@@ -634,7 +634,7 @@ var stateTax = {
          ]
       },
       m : {
-         d   : 30000.,
+         d   : 31500.,
          e   :     0.,
          dep :     0.,
          t : [
@@ -652,7 +652,7 @@ var stateTax = {
    MT : {
       taxSS : true,
       s : {
-         d   : 15000.,
+         d   : 15750.,
          e   :     0.,
          dep :     0.,
          t : [
@@ -661,7 +661,7 @@ var stateTax = {
          ]
       },
       m : {
-         d   : 30000.,
+         d   : 31500.,
          e   :     0.,
          dep :     0.,
          t : [
@@ -764,7 +764,7 @@ var stateTax = {
    NM : {
       taxSS : true,
       s : {
-         d   : 15000.,
+         d   : 15750.,
          e   :     0.,
          dep :  4000.,
          t : [
@@ -777,7 +777,7 @@ var stateTax = {
          ]
       },
       m : {
-         d   : 30000.,
+         d   : 31500.,
          e   :     0.,
          dep :  4000.,
          t : [
@@ -844,7 +844,7 @@ var stateTax = {
    },
    ND : {
       s : {
-         d   : 15000.,
+         d   : 15750.,
          e   :     0.,
          dep :     0.,
          t : [
@@ -854,7 +854,7 @@ var stateTax = {
          ]
       },
       m : {
-         d   : 30000.,
+         d   : 31500.,
          e   :     0.,
          dep :     0.,
          t : [
@@ -981,7 +981,7 @@ var stateTax = {
    },
    SC : {
       s : {
-         d   : 15000.,
+         d   : 15750.,
          e   :     0.,
          dep : -4790.,
          t : [
@@ -991,7 +991,7 @@ var stateTax = {
          ]
       },
       m : {
-         d   : 30000.,
+         d   : 31500.,
          e   :     0.,
          dep : -4790.,
          t : [
@@ -1374,6 +1374,7 @@ function compute()
              f.capdiv.value = Math.round(0.0) ;
              f.ssincome.value = Math.round(0.0) ;
              f.taxdefer.value = Math.round(0.0) ;
+             f.hsa.value = Math.round(0.0) ;
              f.housing.value = Math.round(0.0) ;
 
              f.wage.value =     sessionStorage.getItem("saveWage") ;
@@ -1382,6 +1383,7 @@ function compute()
              f.capdiv.value =   sessionStorage.getItem("saveCap") ;
              f.ssincome.value = sessionStorage.getItem("saveSS") ;
              f.taxdefer.value = sessionStorage.getItem("saveDefer") ;
+             f.hsa.value = sessionStorage.getItem("saveHSA") ;
              f.housing.value =  sessionStorage.getItem("saveHousing") ;
 
              sessionStorage.setItem("state", "0") ;
@@ -1439,12 +1441,16 @@ do {
        f.taxdefer.value = Math.round(taxdefer);
     }
 
+    var hsa = parseFloat(f.hsa.value);
+    if (isNaN(hsa)) { hsa = 0.; }
+    f.hsa.value = Math.round(hsa);
+
     // If you are self employed, you must pay payroll tax.
 
 //    if (f.selfE.checked) f.nopayroll.checked = false;
 
     // base AGI value
-    var AGI = income + treasint - taxdefer;
+    var AGI = income + treasint - taxdefer - hsa;
     var taxableSS = 0.0;
 
     // NOTE -- the law says you pay SS tax if working, even if drawing SS income
@@ -1588,7 +1594,7 @@ do {
     f.totinc.value = Math.round(income + treasint + capdiv + ssincome) ;
 
     f.takehome.value = Math.round(income + treasint + capdiv + ssincome -
-                                  tax - sstax - medtax - taxdefer - housing) ;
+                                  tax - sstax - medtax - taxdefer - hsa - housing) ;
 
     var takehome = f.takehome.value ;
     if (sessionStorageExists()) {
@@ -1600,6 +1606,7 @@ do {
        sessionStorage.setItem("saveCap", f.capdiv.value) ;
        sessionStorage.setItem("saveSS", f.ssincome.value) ;
        sessionStorage.setItem("saveDefer", f.taxdefer.value) ;
+       sessionStorage.setItem("saveHSA", f.hsa.value) ;
        sessionStorage.setItem("saveHousing", f.housing.value) ;
 
        sessionStorage.setItem("saveSSflag", (f.noSS.checked ? "1" : "0") ) ;
@@ -1610,6 +1617,7 @@ do {
        f.wage.value = Math.round(0.0) ;
        f.simpinc.value = Math.round(0.0) ;
        f.taxdefer.value = Math.round(0.0) ;
+       f.hsa.value = Math.round(0.0) ;
 
        if (f.noSS.checked == false) {
           var estSS = 0.707*wage/12.0 ;  // RMS estimate of monthly wage
@@ -1785,6 +1793,12 @@ almost always more complicated than this!</I></B>
       <TD BGCOLOR="d0d0d0"><B>Tax deferred retirement contribution</B> (IRA, 401k, etc)</TD>
       <TD BGCOLOR="d0d0d0">
         <INPUT TYPE=text NAME="taxdefer" onChange="compute();stateUpdate()">
+      </TD>
+      </TR>
+    <TR>
+      <TD BGCOLOR="d0d0d0"><B>Health Saving Account contribution</B></TD>
+      <TD BGCOLOR="d0d0d0">
+        <INPUT TYPE=text NAME="hsa" onChange="compute();stateUpdate()">
       </TD>
       </TR>
     <TR>
