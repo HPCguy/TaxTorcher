@@ -91,6 +91,7 @@ var fedTax = {
 
 var stateTax = {
    AL : {
+      freeDB : true,
       s : {
          d   :  3000.,
          e   : -1500.,
@@ -171,6 +172,7 @@ var stateTax = {
       }
    },
    CA : {
+      taxHSA : true,
       s : {
          d   : 5706.,
          e   :  153.,
@@ -353,6 +355,7 @@ var stateTax = {
       }
    },
    HI : {
+      freeDB : true,
       s : {
          d   :  4400.,
          e   : -1144.,
@@ -414,11 +417,15 @@ var stateTax = {
    },
 
 //   IL : {
+//      freeDB : true,
+//      freeDC : true,
 //   },
 //   IN : {
 //   },
 
    IA : {
+      freeDB : true,
+      freeDC : true,
       s : {
          d   :  0.,
          e   : 40.,
@@ -597,6 +604,8 @@ var stateTax = {
       }
    },
    MS : {
+      freeDB : true,
+      freeDC : true,
       s : {
          d   :  2300.,
          e   : -6000.,
@@ -731,6 +740,7 @@ var stateTax = {
    },
 /*
    NJ : {
+      taxHSA : true,
       s : {
          d   :    0.,
          e   : 1000.,
@@ -938,6 +948,8 @@ var stateTax = {
       }
    },
    PA : {
+      freeDB : true,
+      freeDC : true,
       s : {
          d   : 0.,
          e   : 0.,
@@ -1242,6 +1254,9 @@ var sTaxes =
    var fAGI = parseFloat(f2.fedAGI.value) ;
    var capdiv = parseFloat(f2.capdiv.value) ;
    var wage = parseFloat(f2.wage.value) ;
+   var dbinc = parseFloat(f2.dbincome.value) ;
+   var dcinc = parseFloat(f2.dcincome.value) ;
+   var hsa = parseFloat(f2.hsa.value) ;
 
    // filestatus is wrong for headHousehold
    var fileStatus = ( ( f2.status.value == 'marriedJoint' ) ? 'm' : 's' ) ;
@@ -1254,6 +1269,9 @@ var sTaxes =
       var sched = tObj['t'] ;
       var eTax = AGI + capdiv - tObj['d'] ; // pretend all states tax capgain income
       eTax -= parseFloat(f2.treasint.value) ; // not state taxable
+      eTax -= ( (sObj["freeDB"] == true) ? dbinc : 0.0 ) ; // no DB taxes!
+      eTax -= ( (sObj["freeDC"] == true) ? dcinc : 0.0 ) ; // no DC taxes!
+      eTax += ( (sObj["taxHSA"] == true) ? hsa : 0.0 ) ; // taxes HSA contribution
 
       // Do states tax raw ssincome, or this adjusted amount?
       eTax += ( ((sObj["taxSS"] == true) && (f2.noSS.checked == false)) ? (fAGI - AGI) : 0.0 ) ;
@@ -1413,7 +1431,15 @@ do {
    if (isNaN(simpinc)) { simpinc = 0.; }
    f.simpinc.value = Math.round(simpinc);
 
-   var income = wage + simpinc ;
+   var dbinc = parseFloat(f.dbincome.value);
+   if (isNaN(dbinc)) { dbinc = 0.; }
+   f.dbincome.value = Math.round(dbinc);
+
+   var dcinc = parseFloat(f.dcincome.value);
+   if (isNaN(dcinc)) { dcinc = 0.; }
+   f.dcincome.value = Math.round(dcinc);
+
+   var income = wage + simpinc + dbinc + dcinc ;
 
    var treasint = parseFloat(f.treasint.value);
    if (isNaN(treasint)) { treasint = 0.; }
@@ -1782,6 +1808,18 @@ almost always more complicated than this!</I></B>
       <TD BGCOLOR="d0d0d0">
         <INPUT TYPE=text NAME="simpinc" onChange="compute();stateUpdate()">
       </TD></TR>
+    <TR>
+      <TD BGCOLOR="d0d0d0"><B>Enter Defined Benefit Plan income</B></TD>
+      <TD BGCOLOR="d0d0d0">
+        <INPUT TYPE=text NAME="dbincome" onChange="compute();stateUpdate()">
+      </TD>
+      </TR>
+    <TR>
+      <TD BGCOLOR="d0d0d0"><B>Enter Defined Contribution Plan income</B></TD>
+      <TD BGCOLOR="d0d0d0">
+        <INPUT TYPE=text NAME="dcincome" onChange="compute();stateUpdate()">
+      </TD>
+      </TR>
     <TR>
       <TD BGCOLOR="d0d0d0"><B>Enter annual Social Security income</B></TD>
       <TD BGCOLOR="d0d0d0">
